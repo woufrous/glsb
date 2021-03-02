@@ -144,6 +144,9 @@ int main() {
         while (!glfwWindowShouldClose(win)) {
             glfwPollEvents();
 
+            int fb_width, fb_height;
+            glfwGetFramebufferSize(win, &fb_width, &fb_height);
+            glViewport(0, 0, fb_width, fb_height);
             glClear(GL_COLOR_BUFFER_BIT);
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
