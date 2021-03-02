@@ -16,6 +16,15 @@ add_executable(glsb
     src/imgui/imgui_ogl3.cpp
     src/imgui/imgui_glfw.cpp
 )
+target_compile_options(glsb
+    PUBLIC
+        $<$<CXX_COMPILER_ID:GNU,Clang>:
+            -Wall -Wextra -Wpedantic
+        >
+        $<$<CXX_COMPILER_ID:MSVC>:
+            /W4
+        >
+)
 target_compile_features(glsb
     PUBLIC
         cxx_std_20
