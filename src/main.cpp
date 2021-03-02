@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_GL_3
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
 
 #include "shader.h"
@@ -78,8 +79,7 @@ int main() {
     const char* vert_src = \
     "#version 330 core\n"
     ""
-    "layout (location = 0) in vec2 pos;"
-    //"in vec2 pos;"
+    "in vec2 pos;"
     ""
     "void main() {"
     "    gl_Position = vec4(pos.xy, 0.0, 1.0);"
@@ -88,8 +88,7 @@ int main() {
     const char* frag_src = \
     "#version 330 core\n"
     ""
-    "layout (location=0) out vec4 color;"
-    //"out vec4 color;"
+    "out vec4 color;"
     ""
     "void main() {"
     "    color = vec4(1.0, 1.0, 1.0, 1.0);"
@@ -100,9 +99,7 @@ int main() {
     glBindVertexArray(vao);
 
     struct Vertex {
-        struct Position {
-            float x, y;
-        } pos;
+        glm::vec2 pos;
     };
 
     auto vertices = std::vector<Vertex>{
