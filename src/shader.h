@@ -18,6 +18,8 @@ class Shader {
             Fragment = GL_FRAGMENT_SHADER,
         };
 
+        friend class Program;
+
         Shader(Type type, const char* source) : Shader(static_cast<std::underlying_type_t<Type>>(type), source) {}
         Shader(GLenum type, const char* source) : shader_{0, glDeleteShader} {
             shader_ = UniqueShaderHandle(glCreateShader(type), glDeleteShader);
@@ -34,10 +36,6 @@ class Shader {
                 throw GLSBError(buf);
             }
         }
-
-        GLuint handle() const {
-            return shader_.get();
-        }
     private:
         UniqueShaderHandle shader_;
 };
@@ -50,7 +48,7 @@ class Program {
         Program(const std::vector<Shader>& shaders, const std::vector<std::pair<uint32_t, const char*>> attribs) : prog_{0, glDeleteProgram} {
             prog_ = UniqueProgramHandle(glCreateProgram(), glDeleteProgram);
             for (const auto& shader : shaders) {
-                glAttachShader(prog_.get(), shader.handle());
+                glAttachShader(prog_.get(), shader.shader_.get());
             }
             for (const auto& [idx, name] : attribs) {
                 glBindAttribLocation(prog_.get(), idx, name);
