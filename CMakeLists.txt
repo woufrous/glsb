@@ -13,6 +13,8 @@ conan_basic_setup()
 
 add_executable(glsb
     src/main.cpp
+    src/imgui/imgui_ogl3.cpp
+    src/imgui/imgui_glfw.cpp
 )
 target_compile_features(glsb
     PUBLIC

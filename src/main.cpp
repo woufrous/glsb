@@ -5,9 +5,12 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
+#include <imgui.h>
 
 #include "shader.h"
 #include "buffer.h"
+#include "imgui/imgui_glfw.h"
+#include "imgui/imgui_ogl3.h"
 
 static void glfw_error_cb(int error, const char* msg) {
     spdlog::error("GLFW error ({:d}): {}", error, msg);
@@ -76,6 +79,15 @@ int main() {
     glDebugMessageCallback(gl_error_cb, nullptr);
 #endif // NDEBUG
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    auto io = ImGui::GetIO();
+    (void)io;
+
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(win, true);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
+
     const char* vert_src = \
     "#version 330 core\n"
     ""
@@ -141,11 +153,20 @@ int main() {
         while (!glfwWindowShouldClose(win)) {
             glfwPollEvents();
 
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            ImGui::ShowDemoWindow();
+
+            ImGui::Render();
             int fb_width, fb_height;
             glfwGetFramebufferSize(win, &fb_width, &fb_height);
             glViewport(0, 0, fb_width, fb_height);
             glClear(GL_COLOR_BUFFER_BIT);
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             glfwSwapBuffers(win);
         }
@@ -156,6 +177,10 @@ int main() {
         glfwTerminate();
         return 1;
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(win);
 
