@@ -101,9 +101,10 @@ int main() {
     "#version 330 core\n"
     ""
     "out vec4 color;"
+    "uniform vec4 u_color;"
     ""
     "void main() {"
-    "    color = vec4(1.0, 1.0, 1.0, 1.0);"
+    "    color = u_color;"
     "}";
 
     GLuint vao;
@@ -146,6 +147,7 @@ int main() {
 
         auto prog = Program(shaders, attribs);
         prog.use();
+        auto color = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
 
         glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -157,13 +159,15 @@ int main() {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            ImGui::ShowDemoWindow();
+            ImGui::ColorPicker4("Quad Color", reinterpret_cast<float*>(&color));
 
             ImGui::Render();
             int fb_width, fb_height;
             glfwGetFramebufferSize(win, &fb_width, &fb_height);
             glViewport(0, 0, fb_width, fb_height);
             glClear(GL_COLOR_BUFFER_BIT);
+
+            prog.set_uniform("u_color", color);
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
