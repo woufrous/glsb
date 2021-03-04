@@ -45,7 +45,8 @@ class Program {
     public:
         using UniqueProgramHandle = UniqueHandle<GLuint, decltype(glDeleteProgram)>;
 
-        Program(const std::vector<Shader>& shaders, const std::vector<std::pair<uint32_t, const char*>> attribs) : prog_{0, glDeleteProgram} {
+        Program() : prog_{0, glDeleteProgram} {}
+        Program(const std::vector<Shader>& shaders, const std::vector<std::pair<uint32_t, const char*>> attribs) : Program{} {
             prog_ = UniqueProgramHandle(glCreateProgram(), glDeleteProgram);
             for (const auto& shader : shaders) {
                 glAttachShader(prog_.get(), shader.shader_.get());
