@@ -30,7 +30,7 @@ class Buffer {
                 static_cast<std::underlying_type_t<BufferType>>(Type),
                 size,
                 data,
-                GL_STATIC_DRAW);
+                usage);
             if (do_unbind) {
                 unbind();
             }
