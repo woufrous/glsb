@@ -7,6 +7,8 @@
 #include <spdlog/spdlog.h>
 #include <imgui.h>
 
+#include "application.h"
+
 #include "shader.h"
 #include "buffer.h"
 #include "imgui/imgui_glfw.h"
@@ -41,6 +43,121 @@ static void gl_error_cb(
     spdlog::log(level, "OpenGL: {}", message);
 }
 #endif // NDEBUG
+
+struct Vertex {
+    glm::vec2 pos;
+};
+
+class SandboxApp final : public Application {
+    public:
+        SandboxApp(GLFWwindow* win) : Application{}, win_{win} {}
+        void init() override {
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+            auto io = ImGui::GetIO();
+            (void)io;
+
+            ImGui::StyleColorsDark();
+            ImGui_ImplGlfw_InitForOpenGL(win_, true);
+            ImGui_ImplOpenGL3_Init("#version 330 core");
+
+            const char* vert_src = \
+            "#version 330 core\n"
+            ""
+            "in vec2 pos;"
+            ""
+            "void main() {"
+            "    gl_Position = vec4(pos.xy, 0.0, 1.0);"
+            "}";
+
+            const char* frag_src = \
+            "#version 330 core\n"
+            ""
+            "out vec4 color;"
+            "uniform vec4 u_color;"
+            ""
+            "void main() {"
+            "    color = u_color;"
+            "}";
+
+            GLuint vao;
+            glGenVertexArrays(1, &vao);
+            glBindVertexArray(vao);
+
+            auto vertices_ = std::vector<Vertex>{
+                {{-0.5f, 0.5f}},
+                {{0.5f, 0.5f}},
+                {{0.5f, -0.5f}},
+                {{-0.5f, -0.5f}},
+            };
+            auto indices_ = std::vector<uint32_t>{
+                0, 1, 2, 3, 0, 2
+            };
+
+            vertex_buffer_.bind();
+            vertex_buffer_.set_data(vertices_.data(), vertices_.size()*sizeof(Vertex), GL_STATIC_DRAW);
+
+            index_buffer_.bind();
+            index_buffer_.set_data(indices_.data(), indices_.size()*sizeof(uint32_t), GL_STATIC_DRAW);
+
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), offsetof(Vertex, pos));
+            glEnableVertexAttribArray(0);
+
+            auto shaders = std::vector<Shader>{};
+            shaders.emplace_back(Shader::Type::Vertex, vert_src);
+            shaders.emplace_back(Shader::Type::Fragment, frag_src);
+
+            auto attribs = std::vector<std::pair<uint32_t, const char*>>{
+                {0, "pos"},
+            };
+
+            prog_ = Program(shaders, attribs);
+            prog_.use();
+
+            color_ = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
+
+            glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+
+        void update() override {
+            if (glfwWindowShouldClose(win_)) {
+                this->is_running_ = false;
+                return;
+            }
+
+            glfwPollEvents();
+        }
+
+        void draw() override {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            ImGui::ColorPicker4("Quad Color", reinterpret_cast<float*>(&color_));
+
+            ImGui::Render();
+            int fb_width, fb_height;
+            glfwGetFramebufferSize(win_, &fb_width, &fb_height);
+            glViewport(0, 0, fb_width, fb_height);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            prog_.set_uniform("u_color", color_);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(win_);
+        }
+
+    private:
+        Buffer<BufferType::Array> vertex_buffer_;
+        Buffer<BufferType::ElementArray> index_buffer_;
+        Program prog_;
+        glm::vec4 color_;
+
+        GLFWwindow* win_;
+};
 
 int main() {
     if (!glfwInit()) {
@@ -79,101 +196,10 @@ int main() {
     glDebugMessageCallback(gl_error_cb, nullptr);
 #endif // NDEBUG
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    auto io = ImGui::GetIO();
-    (void)io;
-
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(win, true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
-
-    const char* vert_src = \
-    "#version 330 core\n"
-    ""
-    "in vec2 pos;"
-    ""
-    "void main() {"
-    "    gl_Position = vec4(pos.xy, 0.0, 1.0);"
-    "}";
-
-    const char* frag_src = \
-    "#version 330 core\n"
-    ""
-    "out vec4 color;"
-    "uniform vec4 u_color;"
-    ""
-    "void main() {"
-    "    color = u_color;"
-    "}";
-
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    struct Vertex {
-        glm::vec2 pos;
-    };
-
-    auto vertices = std::vector<Vertex>{
-        {{-0.5f, 0.5f}},
-        {{0.5f, 0.5f}},
-        {{0.5f, -0.5f}},
-        {{-0.5f, -0.5f}},
-    };
-    auto indices = std::vector<uint32_t>{
-        0, 1, 2, 3, 0, 2
-    };
-
-    auto vertex_buffer = Buffer<BufferType::Array>{};
-    vertex_buffer.bind();
-    vertex_buffer.set_data(vertices.data(), vertices.size()*sizeof(Vertex), GL_STATIC_DRAW);
-
-    auto index_buffer = Buffer<BufferType::ElementArray>{};
-    index_buffer.bind();
-    index_buffer.set_data(indices.data(), indices.size()*sizeof(uint32_t), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), offsetof(Vertex, pos));
-    glEnableVertexAttribArray(0);
-
     try {
-        auto shaders = std::vector<Shader>{};
-        shaders.emplace_back(Shader::Type::Vertex, vert_src);
-        shaders.emplace_back(Shader::Type::Fragment, frag_src);
-
-        auto attribs = std::vector<std::pair<uint32_t, const char*>>{
-            {0, "pos"},
-        };
-
-        auto prog = Program(shaders, attribs);
-        prog.use();
-        auto color = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
-
-        glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        while (!glfwWindowShouldClose(win)) {
-            glfwPollEvents();
-
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-
-            ImGui::ColorPicker4("Quad Color", reinterpret_cast<float*>(&color));
-
-            ImGui::Render();
-            int fb_width, fb_height;
-            glfwGetFramebufferSize(win, &fb_width, &fb_height);
-            glViewport(0, 0, fb_width, fb_height);
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            prog.set_uniform("u_color", color);
-            glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-            glfwSwapBuffers(win);
-        }
+        auto app = SandboxApp(win);
+        app.init();
+        app.run();
     }
     catch (const GLSBError& ex) {
         spdlog::error("Error building shaders: {}", ex.what());
