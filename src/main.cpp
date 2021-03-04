@@ -8,11 +8,10 @@
 #include <imgui.h>
 
 #include "application.h"
+#include "layer.h"
 
 #include "shader.h"
 #include "buffer.h"
-#include "imgui/imgui_glfw.h"
-#include "imgui/imgui_ogl3.h"
 
 static void glfw_error_cb(int error, const char* msg) {
     spdlog::error("GLFW error ({:d}): {}", error, msg);
@@ -50,17 +49,11 @@ struct Vertex {
 
 class SandboxApp final : public Application {
     public:
-        SandboxApp(GLFWwindow* win) : Application{}, win_{win} {}
+        SandboxApp(GLFWwindow* win) : Application{}, win_{win}, imgui_{win} {}
+        ~SandboxApp() {
+            imgui_.cleanup();
+        }
         void init() override {
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
-            auto io = ImGui::GetIO();
-            (void)io;
-
-            ImGui::StyleColorsDark();
-            ImGui_ImplGlfw_InitForOpenGL(win_, true);
-            ImGui_ImplOpenGL3_Init("#version 330 core");
-
             const char* vert_src = \
             "#version 330 core\n"
             ""
@@ -118,6 +111,8 @@ class SandboxApp final : public Application {
 
             glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
+
+            imgui_.init();
         }
 
         void update() override {
@@ -127,25 +122,20 @@ class SandboxApp final : public Application {
             }
 
             glfwPollEvents();
-        }
 
-        void draw() override {
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
+            imgui_.on_update();
 
-            ImGui::ColorPicker4("Quad Color", reinterpret_cast<float*>(&color_));
-
-            ImGui::Render();
             int fb_width, fb_height;
             glfwGetFramebufferSize(win_, &fb_width, &fb_height);
             glViewport(0, 0, fb_width, fb_height);
             glClear(GL_COLOR_BUFFER_BIT);
+        }
 
+        void draw() override {
             prog_.set_uniform("u_color", color_);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            imgui_.on_draw();
 
             glfwSwapBuffers(win_);
         }
@@ -155,6 +145,8 @@ class SandboxApp final : public Application {
         Buffer<BufferType::ElementArray> index_buffer_;
         Program prog_;
         glm::vec4 color_;
+
+        ImGuiLayer imgui_;
 
         GLFWwindow* win_;
 };
@@ -207,10 +199,6 @@ int main() {
         glfwTerminate();
         return 1;
     }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 
     glfwDestroyWindow(win);
 
