@@ -141,14 +141,13 @@ class SandboxApp final : public Application {
         }
 
     private:
+        GLFWwindow* win_;
+        ImGuiLayer imgui_;
+
         Buffer<BufferType::Array> vertex_buffer_;
         Buffer<BufferType::ElementArray> index_buffer_;
         Program prog_;
         glm::vec4 color_;
-
-        ImGuiLayer imgui_;
-
-        GLFWwindow* win_;
 };
 
 int main() {
