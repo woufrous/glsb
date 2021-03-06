@@ -9,6 +9,7 @@
 
 #include "application.h"
 #include "layer.h"
+#include "texture.h"
 
 #include "shader.h"
 #include "buffer.h"
@@ -45,6 +46,7 @@ static void gl_error_cb(
 
 struct Vertex {
     glm::vec2 pos;
+    glm::vec2 uv;
 };
 
 class SandboxApp final : public Application {
@@ -58,19 +60,25 @@ class SandboxApp final : public Application {
             "#version 330 core\n"
             ""
             "in vec2 pos;"
+            "in vec2 vert_uv;"
+            "out vec2 uv;"
             ""
             "void main() {"
             "    gl_Position = vec4(pos.xy, 0.0, 1.0);"
+            "    uv = vert_uv;"
             "}";
 
             const char* frag_src = \
             "#version 330 core\n"
             ""
+            "in vec2 uv;"
             "out vec4 color;"
             "uniform vec4 u_color;"
+            "uniform sampler2D tex;"
             ""
             "void main() {"
-            "    color = u_color;"
+            //"    color = u_color;"
+            "    color = texture(tex, uv);"
             "}";
 
             GLuint vao;
@@ -78,10 +86,10 @@ class SandboxApp final : public Application {
             glBindVertexArray(vao);
 
             auto vertices_ = std::vector<Vertex>{
-                {{-0.5f, 0.5f}},
-                {{0.5f, 0.5f}},
-                {{0.5f, -0.5f}},
-                {{-0.5f, -0.5f}},
+                {{-0.5f, 0.5f}, {0.0f, 0.0f}},
+                {{0.5f, 0.5f}, {1.0f, 0.0f}},
+                {{0.5f, -0.5f}, {1.0f, 1.0f}},
+                {{-0.5f, -0.5f}, {0.0f, 1.0f}},
             };
             auto indices_ = std::vector<uint32_t>{
                 0, 1, 2, 3, 0, 2
@@ -93,8 +101,10 @@ class SandboxApp final : public Application {
             index_buffer_.bind();
             index_buffer_.set_data(indices_.data(), indices_.size()*sizeof(uint32_t), GL_STATIC_DRAW);
 
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), offsetof(Vertex, pos));
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
             glEnableVertexAttribArray(0);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+            glEnableVertexAttribArray(1);
 
             auto shaders = std::vector<Shader>{};
             shaders.emplace_back(Shader::Type::Vertex, vert_src);
@@ -102,6 +112,7 @@ class SandboxApp final : public Application {
 
             auto attribs = std::vector<std::pair<uint32_t, const char*>>{
                 {0, "pos"},
+                {1, "vert_uv"},
             };
 
             prog_ = Program(shaders, attribs);
@@ -109,8 +120,23 @@ class SandboxApp final : public Application {
 
             color_ = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
 
+            auto img = Texture("res/opengl.png");
+
+            GLuint tex;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(img.data()));
+
             glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             imgui_.init();
         }
