@@ -13,7 +13,7 @@ class Texture {
             int channels;
             ptr_ = std::unique_ptr<uint8_t, decltype(&stbi_image_free)>(
                 reinterpret_cast<uint8_t*>(
-                    stbi_load(fpath.c_str(), &width_, &height_, &channels, STBI_rgb_alpha)
+                    stbi_load(fpath.string().c_str(), &width_, &height_, &channels, STBI_rgb_alpha)
                 ),
                 stbi_image_free
             );
