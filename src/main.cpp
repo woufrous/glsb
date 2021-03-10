@@ -51,9 +51,13 @@ struct Vertex {
 
 class SandboxApp final : public Application {
     public:
-        SandboxApp(GLFWwindow* win) : Application{}, win_{win}, imgui_{win} {}
+        SandboxApp(GLFWwindow* win) : Application{}, win_{win} {
+            layers_.push_back(std::make_unique<ImGuiLayer>(win));
+        }
         ~SandboxApp() {
-            imgui_.cleanup();
+            for (auto& layer : layers_) {
+                layer->cleanup();
+            }
         }
         void init() override {
             const char* vert_src = \
@@ -138,7 +142,9 @@ class SandboxApp final : public Application {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            imgui_.init();
+            for (auto& layer : layers_) {
+                layer->init();
+            }
         }
 
         void update() override {
@@ -149,7 +155,9 @@ class SandboxApp final : public Application {
 
             glfwPollEvents();
 
-            imgui_.on_update();
+            for (auto& layer : layers_) {
+                layer->on_update();
+            }
 
             int fb_width, fb_height;
             glfwGetFramebufferSize(win_, &fb_width, &fb_height);
@@ -161,14 +169,16 @@ class SandboxApp final : public Application {
             prog_.set_uniform("u_color", color_);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-            imgui_.on_draw();
+            for (auto& layer : layers_) {
+                layer->on_draw();
+            }
 
             glfwSwapBuffers(win_);
         }
 
     private:
         GLFWwindow* win_;
-        ImGuiLayer imgui_;
+        LayerStack layers_;
 
         Buffer<BufferType::Array> vertex_buffer_;
         Buffer<BufferType::ElementArray> index_buffer_;

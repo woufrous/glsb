@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deque>
+
 #include <GLFW/glfw3.h>
 
 #include "imgui/imgui_glfw.h"
@@ -54,3 +56,5 @@ class ImGuiLayer final : public Layer {
     private:
         GLFWwindow* win_;
 };
+
+using LayerStack = std::deque<std::unique_ptr<Layer>>;
