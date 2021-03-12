@@ -49,16 +49,8 @@ struct Vertex {
     glm::vec2 uv;
 };
 
-class SandboxApp final : public Application {
+class SandboxLayer final : public Layer {
     public:
-        SandboxApp(GLFWwindow* win) : Application{}, win_{win} {
-            layers_.push_back(std::make_unique<ImGuiLayer>(win));
-        }
-        ~SandboxApp() {
-            for (auto& layer : layers_) {
-                layer->cleanup();
-            }
-        }
         void init() override {
             const char* vert_src = \
             "#version 330 core\n"
@@ -141,45 +133,20 @@ class SandboxApp final : public Application {
             glClear(GL_COLOR_BUFFER_BIT);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            for (auto& layer : layers_) {
-                layer->init();
-            }
         }
 
-        void update() override {
-            if (glfwWindowShouldClose(win_)) {
-                this->is_running_ = false;
-                return;
-            }
-
-            glfwPollEvents();
-
-            for (auto& layer : layers_) {
-                layer->on_update();
-            }
-
-            int fb_width, fb_height;
-            glfwGetFramebufferSize(win_, &fb_width, &fb_height);
-            glViewport(0, 0, fb_width, fb_height);
-            glClear(GL_COLOR_BUFFER_BIT);
+        void cleanup() override {
         }
 
-        void draw() override {
+        void on_update() override {
+        }
+
+        void on_draw() override {
             prog_.set_uniform("u_color", color_);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-            for (auto& layer : layers_) {
-                layer->on_draw();
-            }
-
-            glfwSwapBuffers(win_);
         }
 
     private:
-        GLFWwindow* win_;
-        LayerStack layers_;
-
         Buffer<BufferType::Array> vertex_buffer_;
         Buffer<BufferType::ElementArray> index_buffer_;
         Program prog_;
@@ -225,7 +192,8 @@ int main() {
 #endif // NDEBUG
 
     try {
-        auto app = SandboxApp(win);
+        auto app = Application(win);
+        app.layers().emplace_front(std::make_unique<SandboxLayer>());
         app.init();
         app.run();
     }
