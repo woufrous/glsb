@@ -14,6 +14,8 @@
 #include "shader.h"
 #include "buffer.h"
 
+static float g_max_anisotropy = -1.;
+
 static void glfw_error_cb(int error, const char* msg) {
     spdlog::error("GLFW error ({:d}): {}", error, msg);
 }
@@ -122,12 +124,16 @@ class SandboxLayer final : public Layer {
             glGenTextures(1, &tex);
             glBindTexture(GL_TEXTURE_2D, tex);
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+            if (g_max_anisotropy > 0) {
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, g_max_anisotropy);
+            }
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(img.data()));
+            glGenerateMipmap(GL_TEXTURE_2D);
 
             glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -186,6 +192,11 @@ int main() {
     spdlog::info("using OpenGL {}", glGetString(GL_VERSION));
     spdlog::info("GLSL version: {}", glGetString(GL_SHADING_LANGUAGE_VERSION));
     spdlog::info("renderer: {}", glGetString(GL_RENDERER));
+
+    if (glewIsExtensionSupported("GL_EXT_texture_filter_anisotropic")) {
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &g_max_anisotropy);
+        spdlog::info("Anisotropic filtering supported up to {}", g_max_anisotropy);
+    }
 
 #ifndef NDEBUG
     glDebugMessageCallback(gl_error_cb, nullptr);
