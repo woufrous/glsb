@@ -69,11 +69,9 @@ class SandboxLayer final : public Layer {
             ""
             "in vec2 uv;"
             "out vec4 color;"
-            "uniform vec4 u_color;"
             "uniform sampler2D tex;"
             ""
             "void main() {"
-            //"    color = u_color;"
             "    color = texture(tex, uv);"
             "}";
 
@@ -102,8 +100,6 @@ class SandboxLayer final : public Layer {
             prog_ = Program(shaders, attribs);
             prog_.use();
 
-            color_ = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
-
             auto img = Texture("res/opengl.png");
 
             GLuint tex;
@@ -129,14 +125,12 @@ class SandboxLayer final : public Layer {
         }
 
         void on_draw() override {
-            prog_.set_uniform("u_color", color_);
             app_.renderer().render(mesh_);
         }
 
     private:
         Renderer::handle_type mesh_;
         Program prog_;
-        glm::vec4 color_;
 };
 
 int main() {

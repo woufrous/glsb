@@ -54,8 +54,6 @@ class ImGuiLayer final : public Layer {
         }
 
         void on_draw() override {
-            //ImGui::ColorPicker4("Quad Color", reinterpret_cast<float*>(&color_));
-
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
     private:
