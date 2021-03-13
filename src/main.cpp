@@ -13,6 +13,7 @@
 
 #include "shader.h"
 #include "buffer.h"
+#include "renderer.h"
 
 static float g_max_anisotropy = -1.;
 
@@ -46,11 +47,6 @@ static void gl_error_cb(
 }
 #endif // NDEBUG
 
-struct Vertex {
-    glm::vec2 pos;
-    glm::vec2 uv;
-};
-
 class SandboxLayer final : public Layer {
     public:
         SandboxLayer(Application& app) : Layer{app} {}
@@ -81,30 +77,18 @@ class SandboxLayer final : public Layer {
             "    color = texture(tex, uv);"
             "}";
 
-            GLuint vao;
-            glGenVertexArrays(1, &vao);
-            glBindVertexArray(vao);
-
-            auto vertices_ = std::vector<Vertex>{
+            auto mesh = Mesh{};
+            mesh.vertex_data = std::vector<Vertex>{
                 {{-0.5f, 0.5f}, {0.0f, 0.0f}},
                 {{0.5f, 0.5f}, {1.0f, 0.0f}},
                 {{0.5f, -0.5f}, {1.0f, 1.0f}},
                 {{-0.5f, -0.5f}, {0.0f, 1.0f}},
             };
-            auto indices_ = std::vector<uint32_t>{
+            mesh.index_data = std::vector<uint32_t>{
                 0, 1, 2, 3, 0, 2
             };
 
-            vertex_buffer_.bind();
-            vertex_buffer_.set_data(vertices_.data(), vertices_.size()*sizeof(Vertex), GL_STATIC_DRAW);
-
-            index_buffer_.bind();
-            index_buffer_.set_data(indices_.data(), indices_.size()*sizeof(uint32_t), GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-            glEnableVertexAttribArray(1);
+            mesh_ = app_.renderer().upload_mesh(mesh);
 
             auto shaders = std::vector<Shader>{};
             shaders.emplace_back(Shader::Type::Vertex, vert_src);
@@ -136,11 +120,6 @@ class SandboxLayer final : public Layer {
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(img.data()));
             glGenerateMipmap(GL_TEXTURE_2D);
-
-            glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
 
         void cleanup() override {
@@ -151,12 +130,11 @@ class SandboxLayer final : public Layer {
 
         void on_draw() override {
             prog_.set_uniform("u_color", color_);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            app_.renderer().render(mesh_);
         }
 
     private:
-        Buffer<BufferType::Array> vertex_buffer_;
-        Buffer<BufferType::ElementArray> index_buffer_;
+        Renderer::handle_type mesh_;
         Program prog_;
         glm::vec4 color_;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "layer.h"
+#include "renderer.h"
 
 class Application {
     public:
@@ -21,6 +22,7 @@ class Application {
         }
 
         void init() {
+            renderer_.init();
             for (auto& layer : layers_) {
                 layer->init();
             }
@@ -53,9 +55,18 @@ class Application {
         LayerStack& layers() noexcept {
             return layers_;
         }
+
+        Renderer& renderer() noexcept {
+            return renderer_;
+        }
+
+        const Renderer& renderer() const noexcept {
+            return renderer_;
+        }
     protected:
         GLFWwindow* win_;
         bool is_running_;
 
         LayerStack layers_;
+        Renderer renderer_;
 };

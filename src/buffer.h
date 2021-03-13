@@ -25,7 +25,7 @@ class Buffer {
             buf_.reset(buf);
         }
 
-        void set_data(void* data, size_t size, GLenum usage) const {
+        void set_data(const void* data, size_t size, GLenum usage) const {
             bool do_unbind = !is_bound_;
             bind();
             glBufferData(
