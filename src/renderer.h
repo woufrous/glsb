@@ -10,7 +10,7 @@
 #include "buffer.h"
 
 struct Vertex {
-    glm::vec2 pos;
+    glm::vec3 pos;
     glm::vec2 uv;
 };
 
@@ -61,7 +61,7 @@ class Renderer {
                 GL_STATIC_DRAW
             );
 
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
             glEnableVertexAttribArray(1);

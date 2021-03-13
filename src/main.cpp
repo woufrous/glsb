@@ -57,13 +57,13 @@ class SandboxLayer final : public Layer {
             const char* vert_src = \
             "#version 330 core\n"
             ""
-            "in vec2 pos;"
+            "in vec3 pos;"
             "in vec2 vert_uv;"
             "out vec2 uv;"
             "uniform mat4 u_mvp;"
             ""
             "void main() {"
-            "    gl_Position = u_mvp*vec4(pos.xy, 0.0, 1.0);"
+            "    gl_Position = u_mvp*vec4(pos, 1.0);"
             "    uv = vert_uv;"
             "}";
 
@@ -80,10 +80,10 @@ class SandboxLayer final : public Layer {
 
             auto mesh = Mesh{};
             mesh.vertex_data = std::vector<Vertex>{
-                {{-0.5f, 0.5f}, {0.0f, 0.0f}},
-                {{0.5f, 0.5f}, {1.0f, 0.0f}},
-                {{0.5f, -0.5f}, {1.0f, 1.0f}},
-                {{-0.5f, -0.5f}, {0.0f, 1.0f}},
+                {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f}},
+                {{0.5f, 0.5f, 0.0f}, {1.0f, 0.0f}},
+                {{0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}},
+                {{-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}},
             };
             mesh.index_data = std::vector<uint32_t>{
                 0, 1, 2, 3, 0, 2
