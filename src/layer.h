@@ -7,8 +7,11 @@
 #include "imgui/imgui_glfw.h"
 #include "imgui/imgui_ogl3.h"
 
+class Application;
+
 class Layer {
     public:
+        Layer(Application& app) : app_{app} {}
         virtual ~Layer() = default;
 
         virtual void init() = 0;
@@ -16,11 +19,13 @@ class Layer {
 
         virtual void on_update() = 0;
         virtual void on_draw() = 0;
+    protected:
+        Application& app_;
 };
 
 class ImGuiLayer final : public Layer {
     public:
-        ImGuiLayer(GLFWwindow* win) : win_{win} {}
+        ImGuiLayer(Application& app, GLFWwindow* win) : Layer{app}, win_{win} {}
 
         void init() override {
             IMGUI_CHECKVERSION();

@@ -5,7 +5,7 @@
 class Application {
     public:
         Application(GLFWwindow* win) : win_{win}, is_running_{true} {
-            layers_.push_back(std::make_unique<ImGuiLayer>(win));
+            layers_.push_back(std::make_unique<ImGuiLayer>(*this, win));
         }
         ~Application() {
             for (auto& layer : layers_) {

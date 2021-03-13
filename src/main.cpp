@@ -53,6 +53,8 @@ struct Vertex {
 
 class SandboxLayer final : public Layer {
     public:
+        SandboxLayer(Application& app) : Layer{app} {}
+
         void init() override {
             const char* vert_src = \
             "#version 330 core\n"
@@ -204,7 +206,7 @@ int main() {
 
     try {
         auto app = Application(win);
-        app.layers().emplace_front(std::make_unique<SandboxLayer>());
+        app.layers().emplace_front(std::make_unique<SandboxLayer>(app));
         app.init();
         app.run();
     }
