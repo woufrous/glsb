@@ -16,6 +16,11 @@ class Application {
 
         void run() {
             while (is_running_) {
+                if (glfwWindowShouldClose(win_)) {
+                    this->is_running_ = false;
+                    break;
+                }
+                prepare_frame();
                 update();
                 draw();
             }
@@ -27,14 +32,16 @@ class Application {
                 layer->init();
             }
         }
-        void update() {
-            if (glfwWindowShouldClose(win_)) {
-                this->is_running_ = false;
-                return;
-            }
 
+        void prepare_frame() {
             glfwPollEvents();
 
+            for (auto& layer : layers_) {
+                layer->prepare_frame();
+            }
+        }
+
+        void update() {
             for (auto& layer : layers_) {
                 layer->on_update();
             }

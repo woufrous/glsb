@@ -121,6 +121,8 @@ class SandboxLayer final : public Layer {
         void cleanup() override {
         }
 
+        void prepare_frame() override {}
+
         void on_update() override {
         }
 

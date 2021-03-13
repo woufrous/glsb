@@ -17,6 +17,7 @@ class Layer {
         virtual void init() = 0;
         virtual void cleanup() = 0;
 
+        virtual void prepare_frame() = 0;
         virtual void on_update() = 0;
         virtual void on_draw() = 0;
     protected:
@@ -38,6 +39,12 @@ class ImGuiLayer final : public Layer {
             ImGui_ImplOpenGL3_Init("#version 330 core");
         }
 
+        void prepare_frame() override {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+        }
+
         void cleanup() override {
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();
@@ -45,15 +52,10 @@ class ImGuiLayer final : public Layer {
         }
 
         void on_update() override {
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-            ImGui::ShowDemoWindow();
-
-            ImGui::Render();
         }
 
         void on_draw() override {
+            ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
     private:
