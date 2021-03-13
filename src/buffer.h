@@ -1,3 +1,5 @@
+#pragma once
+
 #include "utils.h"
 
 #include <GLFW/glfw3.h>
