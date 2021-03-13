@@ -136,7 +136,8 @@ class SandboxLayer final : public Layer {
                 glm::vec3(0.f, 0.f, 0.f),
                 glm::vec3(0.f, 0.f, 1.f)
             );
-            auto proj = glm::perspective(glm::radians(cam_fov_), 16.f/9.f, .1f, 10.f);
+            auto fb_size = app_.renderer().get_viewport_dim();
+            auto proj = glm::perspective(glm::radians(cam_fov_), (float)fb_size.width/(float)fb_size.height, .1f, 10.f);
             auto mvp = proj * view;
             prog_.set_uniform("u_mvp", mvp);
         }

@@ -19,9 +19,17 @@ struct Mesh {
     std::vector<uint32_t> index_data;
 };
 
+template <typename NumT>
+struct Extent2D {
+    NumT width;
+    NumT height;
+};
+
 class Renderer {
     public:
         using handle_type = size_t;
+
+        Renderer(GLFWwindow* win) : win_{win} {}
 
         void init() {
             glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
@@ -68,7 +76,16 @@ class Renderer {
         void render(handle_type mesh_hndl) const {
             glDrawElements(GL_TRIANGLES, meshes_[mesh_hndl].ibo_size, GL_UNSIGNED_INT, 0);
         }
+
+        Extent2D<int> get_viewport_dim() {
+            auto ret = Extent2D<int>{};
+            glfwGetFramebufferSize(win_, &(ret.width), &(ret.height));
+            return ret;
+        }
+
     private:
+        GLFWwindow* win_;
+
         struct mesh_handle {
             uint32_t vao;
             Buffer<BufferType::Array> vbo;

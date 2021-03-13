@@ -5,7 +5,7 @@
 
 class Application {
     public:
-        Application(GLFWwindow* win) : win_{win}, is_running_{true} {
+        Application(GLFWwindow* win) : win_{win}, renderer_{win}, is_running_{true} {
             layers_.push_back(std::make_unique<ImGuiLayer>(*this, win));
         }
         ~Application() {
@@ -72,8 +72,8 @@ class Application {
         }
     protected:
         GLFWwindow* win_;
+        Renderer renderer_;
         bool is_running_;
 
         LayerStack layers_;
-        Renderer renderer_;
 };
