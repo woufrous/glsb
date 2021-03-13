@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <spdlog/spdlog.h>
 #include <imgui.h>
 
@@ -49,7 +50,8 @@ static void gl_error_cb(
 
 class SandboxLayer final : public Layer {
     public:
-        SandboxLayer(Application& app) : Layer{app} {}
+        SandboxLayer(Application& app) : Layer{app}, cam_pos_{-1.f, -1.f, 1.f}, cam_fov_{40.f} {
+        }
 
         void init() override {
             const char* vert_src = \
@@ -58,9 +60,10 @@ class SandboxLayer final : public Layer {
             "in vec2 pos;"
             "in vec2 vert_uv;"
             "out vec2 uv;"
+            "uniform mat4 u_mvp;"
             ""
             "void main() {"
-            "    gl_Position = vec4(pos.xy, 0.0, 1.0);"
+            "    gl_Position = u_mvp*vec4(pos.xy, 0.0, 1.0);"
             "    uv = vert_uv;"
             "}";
 
@@ -124,6 +127,18 @@ class SandboxLayer final : public Layer {
         void prepare_frame() override {}
 
         void on_update() override {
+            ImGui::Begin("Camera control", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
+                ImGui::SliderFloat3("Position", &cam_pos_[0], -1.f, 1.f, "%.1f", 1.f);
+                ImGui::SliderFloat("FoV", &cam_fov_, 1.f, 179.f, "%.0f", 1.f);
+            ImGui::End();
+            auto view = glm::lookAt(
+                cam_pos_,
+                glm::vec3(0.f, 0.f, 0.f),
+                glm::vec3(0.f, 0.f, 1.f)
+            );
+            auto proj = glm::perspective(glm::radians(cam_fov_), 16.f/9.f, .1f, 10.f);
+            auto mvp = proj * view;
+            prog_.set_uniform("u_mvp", mvp);
         }
 
         void on_draw() override {
@@ -131,6 +146,9 @@ class SandboxLayer final : public Layer {
         }
 
     private:
+        glm::vec3 cam_pos_;
+        float cam_fov_;
+
         Renderer::handle_type mesh_;
         Program prog_;
 };

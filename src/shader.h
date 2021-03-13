@@ -76,6 +76,14 @@ class Program {
 
         }
 
+        void set_uniform(const char* name, const glm::mat4& val) const {
+            auto loc = glGetUniformLocation(prog_.get(), name);
+            if (loc == GL_INVALID_VALUE) {
+                throw GLSBError("Uniform not found");
+            }
+            glUniformMatrix4fv(loc, 1, GL_FALSE, &val[0][0]);
+        }
+
         void use() const noexcept {
             glUseProgram(prog_.get());
         }
