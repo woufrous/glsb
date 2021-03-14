@@ -49,7 +49,7 @@ class Application {
             int fb_width, fb_height;
             glfwGetFramebufferSize(win_, &fb_width, &fb_height);
             glViewport(0, 0, fb_width, fb_height);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         void draw() {
             for (auto& layer : layers_) {
