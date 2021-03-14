@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -78,10 +79,17 @@ class Renderer {
             glDrawElements(GL_TRIANGLES, meshes_[mesh_hndl].ibo_size, GL_UNSIGNED_INT, 0);
         }
 
-        Extent2D<int> get_viewport_dim() {
+        Extent2D<int> get_viewport_dim() const noexcept {
             auto ret = Extent2D<int>{};
             glfwGetFramebufferSize(win_, &(ret.width), &(ret.height));
             return ret;
+        }
+
+        void clear_screen() const noexcept {
+            auto fb = get_viewport_dim();
+            assert((fb.width >0) && (fb.height > 0));
+            glViewport(0, 0, fb.width, fb.height);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
 
     private:

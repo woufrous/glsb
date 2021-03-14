@@ -45,13 +45,10 @@ class Application {
             for (auto& layer : layers_) {
                 layer->on_update();
             }
-
-            int fb_width, fb_height;
-            glfwGetFramebufferSize(win_, &fb_width, &fb_height);
-            glViewport(0, 0, fb_width, fb_height);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         void draw() {
+            renderer_.clear_screen();
+
             for (auto& layer : layers_) {
                 layer->on_draw();
             }
