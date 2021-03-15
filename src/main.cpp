@@ -50,8 +50,11 @@ static void gl_error_cb(
 
 class SandboxLayer final : public Layer {
     public:
-        SandboxLayer(Application& app) : Layer{app}, cam_pos_{-1.f, -1.f, 1.f}, cam_fov_{40.f} {
-        }
+        SandboxLayer(Application& app) :
+            Layer{app},
+            cam_pos_{-2.f, -2.f, 2.f},
+            cam_fov_{40.f},
+            light_pos_{-1., 0.f, 1.f} {}
 
         void init() override {
             const char* vert_src = \
@@ -59,23 +62,32 @@ class SandboxLayer final : public Layer {
             ""
             "in vec3 pos;"
             "in vec2 vert_uv;"
+            ""
             "out vec2 uv;"
+            "out float mu;"
+            ""
             "uniform mat4 u_mvp;"
+            "uniform vec3 light;"
             ""
             "void main() {"
+            "    vec3 normal = vec3(0.0, 0.0, 1.0);"
             "    gl_Position = u_mvp*vec4(pos, 1.0);"
             "    uv = vert_uv;"
+            "    vec3 rel_light = light-pos;"
+            "    mu = dot(normal, rel_light)/(length(rel_light)*length(normal));"
             "}";
 
             const char* frag_src = \
             "#version 330 core\n"
             ""
             "in vec2 uv;"
+            "in float mu;"
             "out vec4 color;"
             "uniform sampler2D tex;"
             ""
             "void main() {"
-            "    color = texture(tex, uv);"
+            "    vec4 tex_color = texture(tex, uv);"
+            "    color = mu * (tex_color + vec4(0.3, 0.3, 0.3, 1.0-tex_color.a));"
             "}";
 
             auto mesh = Mesh{};
@@ -131,6 +143,9 @@ class SandboxLayer final : public Layer {
                 ImGui::SliderFloat3("Position", &cam_pos_[0], -1.f, 1.f, "%.1f", 1.f);
                 ImGui::SliderFloat("FoV", &cam_fov_, 1.f, 179.f, "%.0f", 1.f);
             ImGui::End();
+            ImGui::Begin("Light", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
+                ImGui::SliderFloat3("Position", &light_pos_[0], -3.f, 3.f, "%.1f", 1.f);
+            ImGui::End();
             auto view = glm::lookAt(
                 cam_pos_,
                 glm::vec3(0.f, 0.f, 0.f),
@@ -140,6 +155,7 @@ class SandboxLayer final : public Layer {
             auto proj = glm::perspective(glm::radians(cam_fov_), (float)fb_size.width/(float)fb_size.height, .1f, 10.f);
             auto mvp = proj * view;
             prog_.set_uniform("u_mvp", mvp);
+            prog_.set_uniform("light", light_pos_);
         }
 
         void on_draw() override {
@@ -149,6 +165,7 @@ class SandboxLayer final : public Layer {
     private:
         glm::vec3 cam_pos_;
         float cam_fov_;
+        glm::vec3 light_pos_;
 
         Renderer::handle_type mesh_;
         Program prog_;
