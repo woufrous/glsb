@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -46,15 +47,11 @@ class Program {
         using UniqueProgramHandle = UniqueHandle<GLuint, decltype(glDeleteProgram)>;
 
         Program() : prog_{0, glDeleteProgram} {}
-        Program(const std::vector<Shader>& shaders, const std::vector<std::pair<uint32_t, const char*>> attribs) : Program{} {
+        Program(const std::vector<Shader>& shaders) : Program{} {
             prog_ = UniqueProgramHandle(glCreateProgram(), glDeleteProgram);
             for (const auto& shader : shaders) {
                 glAttachShader(prog_.get(), shader.shader_.get());
             }
-            for (const auto& [idx, name] : attribs) {
-                glBindAttribLocation(prog_.get(), idx, name);
-            }
-            glBindFragDataLocation(prog_.get(), 0, "color");
             glLinkProgram(prog_.get());
 
             GLint status;
@@ -67,6 +64,15 @@ class Program {
                 throw GLSBError(buf);
             }
         }
+
+        std::optional<GLuint> get_attrib_location(const char* name) {
+            auto pos = glGetAttribLocation(prog_.get(), name);
+            if ((pos == -1) || (pos == GL_INVALID_OPERATION)) {
+                return std::nullopt;
+            }
+            return pos;
+        }
+
         void set_uniform(const char* name, const glm::vec3& val) const {
             auto loc = glGetUniformLocation(prog_.get(), name);
             if (loc == GL_INVALID_VALUE) {

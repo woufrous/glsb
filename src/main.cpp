@@ -107,12 +107,7 @@ class SandboxLayer final : public Layer {
             shaders.emplace_back(Shader::Type::Vertex, vert_src);
             shaders.emplace_back(Shader::Type::Fragment, frag_src);
 
-            auto attribs = std::vector<std::pair<uint32_t, const char*>>{
-                {0, "pos"},
-                {1, "vert_uv"},
-            };
-
-            prog_ = Program(shaders, attribs);
+            prog_ = Program(shaders);
             prog_.use();
 
             auto img = Texture("res/opengl.png");
