@@ -144,6 +144,9 @@ class SandboxLayer final : public Layer {
             ImGui::Begin("Light", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
                 ImGui::SliderFloat3("Position", &light_pos_[0], -3.f, 3.f, "%.1f", 1.f);
             ImGui::End();
+        }
+
+        void on_draw() override {
             auto view = glm::lookAt(
                 cam_pos_,
                 glm::vec3(0.f, 0.f, 0.f),
@@ -154,11 +157,10 @@ class SandboxLayer final : public Layer {
             auto mvp = proj * view;
 
             auto& prog = app_.renderer().shader_manager().get_shader("default");
+            prog.use();
             prog.set_uniform("u_mvp", mvp);
             prog.set_uniform("light", light_pos_);
-        }
 
-        void on_draw() override {
             app_.renderer().render(mesh_);
         }
 
