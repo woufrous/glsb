@@ -107,8 +107,11 @@ class SandboxLayer final : public Layer {
             shaders.emplace_back(Shader::Type::Vertex, vert_src);
             shaders.emplace_back(Shader::Type::Fragment, frag_src);
 
-            prog_ = Program(shaders);
-            prog_.use();
+            auto& prog = app_.renderer().shader_manager().add_shader(
+                "default", shaders
+            );
+
+            prog.use();
 
             auto img = Texture("res/opengl.png");
 
@@ -149,8 +152,10 @@ class SandboxLayer final : public Layer {
             auto fb_size = app_.renderer().get_viewport_dim();
             auto proj = glm::perspective(glm::radians(cam_fov_), (float)fb_size.width/(float)fb_size.height, .1f, 10.f);
             auto mvp = proj * view;
-            prog_.set_uniform("u_mvp", mvp);
-            prog_.set_uniform("light", light_pos_);
+
+            auto& prog = app_.renderer().shader_manager().get_shader("default");
+            prog.set_uniform("u_mvp", mvp);
+            prog.set_uniform("light", light_pos_);
         }
 
         void on_draw() override {
@@ -163,7 +168,6 @@ class SandboxLayer final : public Layer {
         glm::vec3 light_pos_;
 
         Renderer::handle_type mesh_;
-        Program prog_;
 };
 
 int main() {

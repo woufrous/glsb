@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <GL/glew.h>
@@ -46,8 +47,7 @@ class Program {
     public:
         using UniqueProgramHandle = UniqueHandle<GLuint, decltype(glDeleteProgram)>;
 
-        Program() : prog_{0, glDeleteProgram} {}
-        Program(const std::vector<Shader>& shaders) : Program{} {
+        Program(const std::vector<Shader>& shaders) :  prog_{0, glDeleteProgram} {
             prog_ = UniqueProgramHandle(glCreateProgram(), glDeleteProgram);
             for (const auto& shader : shaders) {
                 glAttachShader(prog_.get(), shader.shader_.get());
@@ -102,4 +102,22 @@ class Program {
         }
     private:
         UniqueProgramHandle prog_;
+};
+
+class ShaderManager {
+    public:
+        Program& add_shader(const std::string& name, const std::vector<Shader>& shaders) {
+            auto it = shaders_.try_emplace(name, shaders).first;
+            return (*it).second;
+        }
+        Program& add_shader(const std::string& name, Program&& prog) {
+            auto it = shaders_.insert(std::make_pair(name, std::move(prog))).first;
+            return (*it).second;
+        }
+
+        Program& get_shader(const std::string& name) {
+            return shaders_.at(name);
+        }
+    private:
+        std::unordered_map<std::string, Program> shaders_;
 };

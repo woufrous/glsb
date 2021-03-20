@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 #include "buffer.h"
+#include "shader.h"
 
 struct Vertex {
     glm::vec3 pos;
@@ -92,6 +93,14 @@ class Renderer {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
 
+        ShaderManager& shader_manager() {
+            return shader_manager_;
+        }
+
+        const ShaderManager& shader_manager() const {
+            return shader_manager_;
+        }
+
     private:
         GLFWwindow* win_;
 
@@ -102,4 +111,5 @@ class Renderer {
             size_t ibo_size;
         };
         std::vector<mesh_handle> meshes_;
+        ShaderManager shader_manager_;
 };
