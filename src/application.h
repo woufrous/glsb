@@ -2,10 +2,11 @@
 
 #include "layer.h"
 #include "renderer.h"
+#include "input.h"
 
 class Application {
     public:
-        Application(GLFWwindow* win) : win_{win}, renderer_{win}, is_running_{true} {
+        Application(GLFWwindow* win) : win_{win}, renderer_{win}, input_mngr_{win}, is_running_{true} {
             layers_.push_back(std::make_unique<ImGuiLayer>(*this, win));
         }
         ~Application() {
@@ -67,9 +68,18 @@ class Application {
         const Renderer& renderer() const noexcept {
             return renderer_;
         }
+
+        InputManager& input_manager() {
+            return input_mngr_;
+        }
+
+        const InputManager& input_manager() const {
+            return input_mngr_;
+        }
     protected:
         GLFWwindow* win_;
         Renderer renderer_;
+        GLFWInputManager input_mngr_;
         bool is_running_;
 
         LayerStack layers_;
