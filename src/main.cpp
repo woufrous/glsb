@@ -81,6 +81,7 @@ class SandboxLayer final : public Layer {
             "#version 330 core\n"
             ""
             "in vec3 pos;"
+            "in vec3 normal;"
             "in vec2 vert_uv;"
             ""
             "out vec2 uv;"
@@ -90,7 +91,6 @@ class SandboxLayer final : public Layer {
             "uniform vec3 light;"
             ""
             "void main() {"
-            "    vec3 normal = vec3(0.0, 0.0, 1.0);"
             "    gl_Position = u_mvp*vec4(pos, 1.0);"
             "    uv = vert_uv;"
             "    vec3 rel_light = light-pos;"
@@ -112,10 +112,10 @@ class SandboxLayer final : public Layer {
 
             auto mesh = Mesh{};
             mesh.vertex_data = std::vector<Vertex>{
-                {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f}},
-                {{0.5f, 0.5f, 0.0f}, {1.0f, 0.0f}},
-                {{0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}},
-                {{-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}},
+                {{-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+                {{ 0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+                {{ 0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+                {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
             };
             mesh.index_data = std::vector<uint32_t>{
                 0, 1, 2, 3, 0, 2

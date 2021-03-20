@@ -9,17 +9,8 @@
 #include <glm/glm.hpp>
 
 #include "buffer.h"
+#include "mesh.h"
 #include "shader.h"
-
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec2 uv;
-};
-
-struct Mesh {
-    std::vector<Vertex> vertex_data;
-    std::vector<uint32_t> index_data;
-};
 
 template <typename NumT>
 struct Extent2D {
@@ -66,8 +57,10 @@ class Renderer {
 
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, norm));
             glEnableVertexAttribArray(1);
+            glVertexAttribPointer(2, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+            glEnableVertexAttribArray(2);
 
             // TODO: locking
             meshes_.emplace_back(vao, std::move(vbo), std::move(ibo), mesh.index_data.size());
