@@ -72,6 +72,11 @@ class SandboxLayer final : public Layer {
                 }
                 spdlog::info("Key {} {} with modifiers 0b{:b}", static_cast<int>(code), state_str, static_cast<int>(mods));
             });
+
+            app_.input_manager().register_mouse_scroll_handler([this](double /*x_offs*/, double y_offs){
+                this->cam_fov_ += y_offs*5;
+            });
+
             const char* vert_src = \
             "#version 330 core\n"
             ""

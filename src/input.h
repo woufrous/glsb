@@ -61,6 +61,12 @@ enum class KeyState : int {
     Repeated = GLFW_REPEAT,
 };
 
+enum class ButtonCode : int {
+    BUTTON_LEFT = GLFW_MOUSE_BUTTON_LEFT,
+    BUTTON_MIDDLE = GLFW_MOUSE_BUTTON_MIDDLE,
+    BUTTON_RIGHT = GLFW_MOUSE_BUTTON_RIGHT,
+};
+
 namespace details {
 
 template <typename EnumT, typename StorageT = ::std::underlying_type_t<EnumT>>
@@ -135,12 +141,16 @@ using KeyModifier = details::Bitset<details::KeyModifierBits>;
 class InputManager {
     public:
         using key_handler_type = std::function<void(KeyCode, KeyState, KeyModifier)>;
+        using mouse_button_handler_type =  std::function<void(ButtonCode, KeyState, KeyModifier)>;
+        using mouse_scroll_handler_type =  std::function<void(double, double)>;
 
         virtual ~InputManager() = default;
 
         virtual KeyState key_state(KeyCode) const = 0;
 
         virtual void register_key_handler(key_handler_type handler) = 0;
+        virtual void register_mouse_button_handler(mouse_button_handler_type handler) = 0;
+        virtual void register_mouse_scroll_handler(mouse_scroll_handler_type handler) = 0;
 };
 
 class GLFWInputManager : public InputManager {
@@ -149,6 +159,8 @@ class GLFWInputManager : public InputManager {
             glfwSetWindowUserPointer(win, this);
 
             glfwSetKeyCallback(win_, GLFWInputManager::on_key);
+            glfwSetMouseButtonCallback(win_, GLFWInputManager::on_mouse_button);
+            glfwSetScrollCallback(win_, GLFWInputManager::on_mouse_scroll);
         }
 
         static void on_key(GLFWwindow* win, int key, int /*scancode*/, int action, int mods) {
@@ -158,16 +170,40 @@ class GLFWInputManager : public InputManager {
             }
         }
 
-        KeyState key_state(KeyCode kcode) const {
+        static void on_mouse_button(GLFWwindow* win, int button, int action, int mods) {
+            auto input_mngr = reinterpret_cast<GLFWInputManager*>(glfwGetWindowUserPointer(win));
+            for (auto hndlr : input_mngr->mouse_button_handlers_) {
+                hndlr(ButtonCode(button), KeyState(action), KeyModifier(mods));
+            }
+        }
+
+        static void on_mouse_scroll(GLFWwindow* win, double x_offs, double y_offs) {
+            auto input_mngr = reinterpret_cast<GLFWInputManager*>(glfwGetWindowUserPointer(win));
+            for (auto hndlr : input_mngr->mouse_scroll_handlers_) {
+                hndlr(x_offs, y_offs);
+            }
+        }
+
+        KeyState key_state(KeyCode key) const override {
             return KeyState(
-                glfwGetKey(win_, static_cast<std::underlying_type_t<KeyCode>>( kcode))
+                glfwGetKey(win_, static_cast<std::underlying_type_t<KeyCode>>(key))
             );
         }
 
-        void register_key_handler(key_handler_type handler) {
+        void register_key_handler(key_handler_type handler) override {
             key_handlers_.push_back(handler);
+        }
+
+        void register_mouse_button_handler(mouse_button_handler_type handler) override {
+            mouse_button_handlers_.push_back(handler);
+        }
+
+        void register_mouse_scroll_handler(mouse_scroll_handler_type handler) override {
+            mouse_scroll_handlers_.push_back(handler);
         }
     private:
         GLFWwindow* win_;
         std::vector<key_handler_type> key_handlers_;
+        std::vector<mouse_button_handler_type> mouse_button_handlers_;
+        std::vector<mouse_scroll_handler_type> mouse_scroll_handlers_;
 };
