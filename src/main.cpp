@@ -53,7 +53,7 @@ class SandboxLayer final : public Layer {
     public:
         SandboxLayer(Application& app) :
             Layer{app},
-            cam_pos_{-2.f, -2.f, 2.f},
+            cam_pos_{2.f, 2.f, 2.f},
             cam_fov_{40.f},
             light_pos_{-1., 0.f, 1.f} {}
 
@@ -108,19 +108,10 @@ class SandboxLayer final : public Layer {
             ""
             "void main() {"
             "    vec4 tex_color = texture(tex, uv);"
-            "    color = mu * (tex_color + vec4(0.3, 0.3, 0.3, 1.0-tex_color.a));"
+            "    color = tex_color;"
             "}";
 
-            auto mesh = Mesh{};
-            mesh.vertex_data = std::vector<Vertex>{
-                {{-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-                {{ 0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
-                {{ 0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-                {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            };
-            mesh.index_data = std::vector<uint32_t>{
-                0, 1, 2, 3, 0, 2
-            };
+            auto mesh = load_obj("res/room.obj");
 
             mesh_ = app_.renderer().upload_mesh(mesh);
 
@@ -134,7 +125,7 @@ class SandboxLayer final : public Layer {
 
             prog.use();
 
-            auto img = Texture("res/opengl.png");
+            auto img = Texture("res/room.png");
 
             GLuint tex;
             glGenTextures(1, &tex);
@@ -159,7 +150,7 @@ class SandboxLayer final : public Layer {
 
         void on_update() override {
             ImGui::Begin("Camera control", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
-                ImGui::SliderFloat3("Position", &cam_pos_[0], -1.f, 1.f, "%.1f", 1.f);
+                ImGui::SliderFloat3("Position", &cam_pos_[0], -3.f, 3.f, "%.1f", 1.f);
                 ImGui::SliderFloat("FoV", &cam_fov_, 1.f, 179.f, "%.0f", 1.f);
             ImGui::End();
             ImGui::Begin("Light", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
