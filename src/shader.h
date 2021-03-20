@@ -2,12 +2,16 @@
 
 #include <optional>
 #include <string>
+using namespace std::string_literals;
 #include <unordered_map>
 #include <vector>
 
+#include <glm/glm.hpp>
 #include <GL/glew.h>
 #define GLFW_INCLUDE_GL_3
 #include <GLFW/glfw3.h>
+
+#include <spdlog/spdlog.h>
 
 #include "utils.h"
 
@@ -20,26 +24,15 @@ class Shader {
             Fragment = GL_FRAGMENT_SHADER,
         };
 
-        friend class Program;
-
-        Shader(Type type, const char* source) : Shader(static_cast<std::underlying_type_t<Type>>(type), source) {}
-        Shader(GLenum type, const char* source) : shader_{0, glDeleteShader} {
-            shader_ = UniqueShaderHandle(glCreateShader(type), glDeleteShader);
-            glShaderSource(shader_.get(), 1, &source, nullptr);
-            glCompileShader(shader_.get());
-
-            GLint status;
-            glGetShaderiv(shader_.get(), GL_COMPILE_STATUS, &status);
-            if (status != GL_TRUE) {
-                GLsizei len;
-                char buf[1024];
-                glGetShaderInfoLog(shader_.get(), sizeof(buf), &len, buf);
-
-                throw GLSBError(buf);
-            }
+        Shader(Type type, const char* source) : shader_{0, glDeleteShader} {
+            compile_shader(type, source);
         }
     private:
+        void compile_shader(Type type, const char* source);
+
         UniqueShaderHandle shader_;
+
+        friend class Program;
 };
 
 
@@ -47,25 +40,11 @@ class Program {
     public:
         using UniqueProgramHandle = UniqueHandle<GLuint, decltype(glDeleteProgram)>;
 
-        Program(const std::vector<Shader>& shaders) :  prog_{0, glDeleteProgram} {
-            prog_ = UniqueProgramHandle(glCreateProgram(), glDeleteProgram);
-            for (const auto& shader : shaders) {
-                glAttachShader(prog_.get(), shader.shader_.get());
-            }
-            glLinkProgram(prog_.get());
-
-            GLint status;
-            glGetProgramiv(prog_.get(), GL_LINK_STATUS, &status);
-            if (status != GL_TRUE) {
-                GLsizei len;
-                char buf[1024];
-                glGetProgramInfoLog(prog_.get(), sizeof(buf), &len, buf);
-
-                throw GLSBError(buf);
-            }
+        Program(const std::vector<Shader>& shaders) : prog_{0, glDeleteProgram} {
+            link_program(shaders);
         }
 
-        std::optional<GLuint> get_attrib_location(const char* name) {
+        std::optional<GLuint> get_attrib_location(const char* name) const noexcept {
             auto pos = glGetAttribLocation(prog_.get(), name);
             if ((pos == -1) || (pos == GL_INVALID_OPERATION)) {
                 return std::nullopt;
@@ -73,34 +52,50 @@ class Program {
             return pos;
         }
 
-        void set_uniform(const char* name, const glm::vec3& val) const {
-            auto loc = glGetUniformLocation(prog_.get(), name);
-            if (loc == GL_INVALID_VALUE) {
-                throw GLSBError("Uniform not found");
+        std::optional<GLuint> get_uniform_location(const char* name) const noexcept {
+            auto pos = glGetUniformLocation(prog_.get(), name);
+            if ((pos == -1) || (pos == GL_INVALID_OPERATION) || pos == GL_INVALID_VALUE) {
+                return std::nullopt;
             }
-            glUniform3f(loc, val[0], val[1], val[2]);
+            return pos;
         }
 
-        void set_uniform(const char* name, const glm::vec4& val) const {
-            auto loc = glGetUniformLocation(prog_.get(), name);
-            if (loc == GL_INVALID_VALUE) {
-                throw GLSBError("Uniform not found");
+        bool set_uniform(const char* name, const glm::vec3& val) const noexcept {
+            auto loc = get_uniform_location(name);
+            if (!loc) {
+                spdlog::info("trying to set unknown uniform \"{}\"", name);
+                return false;
             }
-            glUniform4f(loc, val[0], val[1], val[2], val[3]);
+            glUniform3f(*loc, val[0], val[1], val[2]);
+            return true;
         }
 
-        void set_uniform(const char* name, const glm::mat4& val) const {
-            auto loc = glGetUniformLocation(prog_.get(), name);
-            if (loc == GL_INVALID_VALUE) {
-                throw GLSBError("Uniform not found");
+        bool set_uniform(const char* name, const glm::vec4& val) const noexcept {
+            auto loc = get_uniform_location(name);
+            if (!loc) {
+                spdlog::info("trying to set unknown uniform \"{}\"", name);
+                return false;
             }
-            glUniformMatrix4fv(loc, 1, GL_FALSE, &val[0][0]);
+            glUniform4f(*loc, val[0], val[1], val[2], val[3]);
+            return true;
+        }
+
+        bool set_uniform(const char* name, const glm::mat4& val) const noexcept {
+            auto loc = get_uniform_location(name);
+            if (!loc) {
+                spdlog::info("trying to set unknown uniform \"{}\"", name);
+                return false;
+            }
+            glUniformMatrix4fv(*loc, 1, GL_FALSE, &val[0][0]);
+            return true;
         }
 
         void use() const noexcept {
             glUseProgram(prog_.get());
         }
     private:
+        void link_program(const std::vector<Shader>& shaders);
+
         UniqueProgramHandle prog_;
 };
 
@@ -116,6 +111,10 @@ class ShaderManager {
         }
 
         Program& get_shader(const std::string& name) {
+            return shaders_.at(name);
+        }
+
+        const Program& get_shader(const std::string& name) const {
             return shaders_.at(name);
         }
     private:

@@ -13,6 +13,7 @@ conan_basic_setup()
 
 add_executable(glsb
     src/main.cpp
+    src/shader.cpp
     src/imgui/imgui_ogl3.cpp
     src/imgui/imgui_glfw.cpp
 )

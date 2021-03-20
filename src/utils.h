@@ -1,6 +1,6 @@
 #pragma once
 
-#include <exception>
+#include <stdexcept>
 
 class GLSBError : public std::runtime_error {
     public:

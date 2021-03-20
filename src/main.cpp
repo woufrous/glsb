@@ -15,6 +15,7 @@
 #include "shader.h"
 #include "buffer.h"
 #include "renderer.h"
+#include "utils.h"
 
 static float g_max_anisotropy = -1.;
 
