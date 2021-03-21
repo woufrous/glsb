@@ -11,7 +11,7 @@
 #include "application.h"
 #include "layer.h"
 #include "texture.h"
-
+#include "scene.h"
 #include "shader.h"
 #include "buffer.h"
 #include "renderer.h"
@@ -51,11 +51,20 @@ static void gl_error_cb(
 
 class SandboxLayer final : public Layer {
     public:
-        SandboxLayer(Application& app) :
-            Layer{app},
-            cam_pos_{2.f, 2.f, 2.f},
-            cam_fov_{40.f},
-            light_pos_{-1., 0.f, 1.f} {}
+        SandboxLayer(Application& app) : Layer{app} {
+            scene_.cam = Camera{
+                {2.f, 2.f, 2.f},
+                {0.f, 0.f, 0.f},
+                std::make_pair(0.1f, 10.f),
+                40.f,
+                16.f/9.f
+            };
+            scene_.light = Light{
+                {-1.f, 0.f, 1.f},
+                {1.f, 1.f, 1.f},
+                1.0f
+            };
+        }
 
         void init() override {
             app_.input_manager().register_key_handler([](KeyCode code, KeyState state, KeyModifier mods) -> void {
@@ -75,7 +84,7 @@ class SandboxLayer final : public Layer {
             });
 
             app_.input_manager().register_mouse_scroll_handler([this](double /*x_offs*/, double y_offs){
-                this->cam_fov_ += y_offs*5;
+                this->scene_.cam.fov += y_offs*5;
             });
 
             const char* vert_src = \
@@ -111,10 +120,6 @@ class SandboxLayer final : public Layer {
             "    color = tex_color;"
             "}";
 
-            auto mesh = load_obj("res/room.obj");
-
-            mesh_ = app_.renderer().upload_mesh(mesh);
-
             auto shaders = std::vector<Shader>{};
             shaders.emplace_back(Shader::Type::Vertex, vert_src);
             shaders.emplace_back(Shader::Type::Fragment, frag_src);
@@ -124,6 +129,9 @@ class SandboxLayer final : public Layer {
             );
 
             prog.use();
+
+            scene_.meshes.emplace_back(load_obj("res/room.obj"));
+            upload_meshes();
 
             auto img = Texture("res/room.png");
 
@@ -143,45 +151,44 @@ class SandboxLayer final : public Layer {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
 
-        void cleanup() override {
-        }
-
+        void cleanup() override {}
         void prepare_frame() override {}
 
         void on_update() override {
             ImGui::Begin("Camera control", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
-                ImGui::SliderFloat3("Position", &cam_pos_[0], -3.f, 3.f, "%.1f", 1.f);
-                ImGui::SliderFloat("FoV", &cam_fov_, 1.f, 179.f, "%.0f", 1.f);
+                ImGui::SliderFloat3("Position", &scene_.cam.pos[0], -3.f, 3.f, "%.1f", 1.f);
+                ImGui::SliderFloat("FoV", &scene_.cam.fov, 1.f, 179.f, "%.0f", 1.f);
             ImGui::End();
             ImGui::Begin("Light", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
-                ImGui::SliderFloat3("Position", &light_pos_[0], -3.f, 3.f, "%.1f", 1.f);
+                ImGui::SliderFloat3("Position", &scene_.light.pos[0], -3.f, 3.f, "%.1f", 1.f);
             ImGui::End();
         }
 
         void on_draw() override {
-            auto view = glm::lookAt(
-                cam_pos_,
-                glm::vec3(0.f, 0.f, 0.f),
-                glm::vec3(0.f, 0.f, 1.f)
-            );
             auto fb_size = app_.renderer().get_viewport_dim();
-            auto proj = glm::perspective(glm::radians(cam_fov_), (float)fb_size.width/(float)fb_size.height, .1f, 10.f);
-            auto mvp = proj * view;
+            scene_.cam.aspect = (float)fb_size.width/(float)fb_size.height;
+            auto vp = scene_.cam.get_vp_matrix();
 
             auto& prog = app_.renderer().shader_manager().get_shader("default");
             prog.use();
-            prog.set_uniform("u_mvp", mvp);
-            prog.set_uniform("light", light_pos_);
+            prog.set_uniform("u_mvp", vp);
+            prog.set_uniform("light", scene_.light.pos);
 
-            app_.renderer().render(mesh_);
+            for (auto mesh : mesh_hndls_) {
+                app_.renderer().render(mesh);
+            }
         }
 
     private:
-        glm::vec3 cam_pos_;
-        float cam_fov_;
-        glm::vec3 light_pos_;
+        void upload_meshes() noexcept {
+            for (const auto& mesh : scene_.meshes) {
+                mesh_hndls_.emplace_back(app_.renderer().upload_mesh(mesh));
+            }
+        }
 
-        Renderer::handle_type mesh_;
+        Scene scene_;
+
+        std::vector<Renderer::handle_type> mesh_hndls_;
 };
 
 int main() {
