@@ -155,6 +155,24 @@ class SandboxLayer final : public Layer {
         void prepare_frame() override {}
 
         void on_update() override {
+            if (app_.input_manager().key_state(KeyCode::KEY_W) == KeyState::Pressed) {
+                scene_.cam.pos += scene_.cam.local_ccs().e_z*0.1f;
+            }
+            if (app_.input_manager().key_state(KeyCode::KEY_S) == KeyState::Pressed) {
+                scene_.cam.pos -= scene_.cam.local_ccs().e_z*0.1f;
+            }
+            if (app_.input_manager().key_state(KeyCode::KEY_D) == KeyState::Pressed) {
+                scene_.cam.pos += scene_.cam.local_ccs().e_y*0.1f;
+            }
+            if (app_.input_manager().key_state(KeyCode::KEY_A) == KeyState::Pressed) {
+                scene_.cam.pos -= scene_.cam.local_ccs().e_y*0.1f;
+            }
+            if (app_.input_manager().key_state(KeyCode::KEY_Q) == KeyState::Pressed) {
+                scene_.cam.pos += scene_.cam.local_ccs().e_x*0.1f;
+            }
+            if (app_.input_manager().key_state(KeyCode::KEY_Z) == KeyState::Pressed) {
+                scene_.cam.pos -= scene_.cam.local_ccs().e_x*0.1f;
+            }
             ImGui::Begin("Camera control", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
                 ImGui::SliderFloat3("Position", &scene_.cam.pos[0], -3.f, 3.f, "%.1f", 1.f);
                 ImGui::SliderFloat("FoV", &scene_.cam.fov, 1.f, 179.f, "%.0f", 1.f);
