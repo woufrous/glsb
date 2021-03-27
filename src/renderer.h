@@ -72,6 +72,7 @@ class Renderer {
         }
 
         void render(handle_type mesh_hndl) const {
+            glBindVertexArray(meshes_[mesh_hndl].vao);
             glDrawElements(GL_TRIANGLES, meshes_[mesh_hndl].ibo_size, GL_UNSIGNED_INT, 0);
         }
 
