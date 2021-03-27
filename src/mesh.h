@@ -30,7 +30,28 @@ struct Vertex {
 struct Mesh {
     std::vector<Vertex> vertex_data;
     std::vector<uint32_t> index_data;
+
+    void transform(glm::mat4 tmat) noexcept {
+        for (auto& vert : vertex_data) {
+            vert.pos = static_cast<glm::vec3>(tmat * glm::vec4(vert.pos, 1.f));
+            vert.norm = static_cast<glm::vec3>(tmat * glm::vec4(vert.norm, 1.f));
+        }
+    }
 };
+
+Mesh generate_quad(float xscale, float yscale) {
+    auto x_half = xscale/2.f;
+    auto y_half = yscale/2.f;
+    return Mesh{
+        {
+            {{-x_half, -y_half, 0.f}, {0.f, 0.f, 1.0f}, {0.0f, 0.0f}},
+            {{ x_half, -y_half, 0.f}, {0.f, 0.f, 1.0f}, {1.0f, 0.0f}},
+            {{ x_half,  y_half, 0.f}, {0.f, 0.f, 1.0f}, {1.0f, 1.0f}},
+            {{-x_half,  y_half, 0.f}, {0.f, 0.f, 1.0f}, {0.0f, 1.0f}},
+        },
+        {0, 1, 2, 2, 3, 0}
+    };
+}
 
 Mesh load_obj(const std::filesystem::path& fpath) {
     auto attrib = tinyobj::attrib_t{};

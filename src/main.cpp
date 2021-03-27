@@ -130,10 +130,12 @@ class SandboxLayer final : public Layer {
 
             prog.use();
 
-            scene_.meshes.emplace_back(load_obj("res/room.obj"));
+            scene_.meshes.emplace_back(load_obj("res/cube.obj"))
+                .transform(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 1.f)));
+            scene_.meshes.emplace_back(generate_quad(5.f, 5.f));
             upload_meshes();
 
-            auto img = Texture("res/room.png");
+            auto img = Texture("res/cube.png");
 
             GLuint tex;
             glGenTextures(1, &tex);
