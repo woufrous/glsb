@@ -15,6 +15,14 @@ using namespace std::string_literals;
 
 #include "utils.h"
 
+struct VertexDescriptor {
+    const char* name;
+    uint32_t count;
+    uint32_t stride;
+    uintptr_t offset;
+    bool is_normalized;
+};
+
 class Shader {
     public:
         using UniqueShaderHandle = UniqueHandle<GLuint, decltype(glDeleteShader)>;
@@ -50,6 +58,17 @@ class Program {
                 return std::nullopt;
             }
             return pos;
+        }
+
+        bool set_attrib_pointer(const VertexDescriptor& desc) const {
+            auto pos = get_attrib_location(desc.name);
+            if (!pos) {
+                spdlog::info("trying to bind unkown attribute \"{}\"", desc.name);
+                return false;
+            }
+            glVertexAttribPointer(*pos, desc.count, GL_FLOAT, desc.is_normalized ? GL_TRUE : GL_FALSE, desc.stride, (void*)(desc.offset));
+            glEnableVertexAttribArray(*pos);
+            return true;
         }
 
         std::optional<GLint> get_uniform_location(const char* name) const noexcept {

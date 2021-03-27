@@ -57,12 +57,9 @@ class Renderer {
                 GL_STATIC_DRAW
             );
 
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, norm));
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-            glEnableVertexAttribArray(2);
+            for (auto&& desc : Vertex::get_vertex_desc()) {
+                shader_manager_.get_shader("default").set_attrib_pointer(desc);
+            }
 
             // TODO: locking
             meshes_.emplace_back(vao, std::move(vbo), std::move(ibo), mesh.index_data.size());

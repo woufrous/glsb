@@ -10,12 +10,21 @@ using namespace std::string_literals;
 #include <tiny_obj_loader.h>
 
 #include "renderer.h"
+#include "shader.h"
 #include "utils.h"
 
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 norm;
     glm::vec2 uv;
+
+    static std::vector<VertexDescriptor> get_vertex_desc() noexcept {
+        return std::vector<VertexDescriptor>{
+            {"pos", 3, sizeof(Vertex), offsetof(Vertex, pos), true},
+            {"normal", 3, sizeof(Vertex), offsetof(Vertex, norm), true},
+            {"vert_uv", 2, sizeof(Vertex), offsetof(Vertex, uv), true},
+        };
+    }
 };
 
 struct Mesh {
