@@ -1,6 +1,9 @@
 #pragma once
 
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
+#include <vector>
 
 class GLSBError : public std::runtime_error {
     public:
@@ -60,3 +63,16 @@ class UniqueHandle {
         T hndl_;
         Deleter deleter_;
 };
+
+inline std::vector<char> load_file(const std::filesystem::path& fpath) {
+    auto ifs = std::ifstream(fpath);
+    ifs.seekg(0, std::ios_base::end);
+    auto len = static_cast<size_t>(ifs.tellg());
+    ifs.seekg(0);
+
+    auto ret = std::vector<char>(len+1);
+    ifs.read(ret.data(), len);
+    ret[len] = 0;
+
+    return ret;
+}

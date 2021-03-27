@@ -87,42 +87,12 @@ class SandboxLayer final : public Layer {
                 this->scene_.cam.fov += y_offs*5;
             });
 
-            const char* vert_src = \
-            "#version 330 core\n"
-            ""
-            "in vec3 pos;"
-            "in vec3 normal;"
-            "in vec2 vert_uv;"
-            ""
-            "out vec2 uv;"
-            "out float mu;"
-            ""
-            "uniform mat4 u_mvp;"
-            "uniform vec3 light;"
-            ""
-            "void main() {"
-            "    gl_Position = u_mvp*vec4(pos, 1.0);"
-            "    uv = vert_uv;"
-            "    vec3 rel_light = light-pos;"
-            "    mu = dot(normal, rel_light)/(length(rel_light)*length(normal));"
-            "}";
-
-            const char* frag_src = \
-            "#version 330 core\n"
-            ""
-            "in vec2 uv;"
-            "in float mu;"
-            "out vec4 color;"
-            "uniform sampler2D tex;"
-            ""
-            "void main() {"
-            "    vec4 tex_color = texture(tex, uv);"
-            "    color = tex_color;"
-            "}";
+            auto vert_src = load_file("res/vert.glsl");
+            auto frag_src = load_file("res/frag.glsl");
 
             auto shaders = std::vector<Shader>{};
-            shaders.emplace_back(Shader::Type::Vertex, vert_src);
-            shaders.emplace_back(Shader::Type::Fragment, frag_src);
+            shaders.emplace_back(Shader::Type::Vertex, vert_src.data());
+            shaders.emplace_back(Shader::Type::Fragment, frag_src.data());
 
             auto& prog = app_.renderer().shader_manager().add_shader(
                 "default", shaders
