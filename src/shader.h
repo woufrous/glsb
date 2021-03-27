@@ -44,7 +44,7 @@ class Program {
             link_program(shaders);
         }
 
-        std::optional<GLuint> get_attrib_location(const char* name) const noexcept {
+        std::optional<GLint> get_attrib_location(const char* name) const noexcept {
             auto pos = glGetAttribLocation(prog_.get(), name);
             if ((pos == -1) || (pos == GL_INVALID_OPERATION)) {
                 return std::nullopt;
@@ -52,7 +52,7 @@ class Program {
             return pos;
         }
 
-        std::optional<GLuint> get_uniform_location(const char* name) const noexcept {
+        std::optional<GLint> get_uniform_location(const char* name) const noexcept {
             auto pos = glGetUniformLocation(prog_.get(), name);
             if ((pos == -1) || (pos == GL_INVALID_OPERATION) || pos == GL_INVALID_VALUE) {
                 return std::nullopt;
