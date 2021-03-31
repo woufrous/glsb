@@ -6,9 +6,10 @@ in vec2 v_uv;
 
 out vec2 f_uv;
 
-uniform mat4 u_mvp;
+uniform mat4 u_view;
+uniform mat4 u_proj;
 
 void main() {
-    gl_Position = u_mvp*vec4(v_pos, 1.0);
+    gl_Position = u_proj * u_view * vec4(v_pos, 1.0);
     f_uv = v_uv;
 }

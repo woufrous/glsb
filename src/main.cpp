@@ -157,11 +157,11 @@ class SandboxLayer final : public Layer {
         void on_draw() override {
             auto fb_size = app_.renderer().get_viewport_dim();
             scene_.cam.aspect = (float)fb_size.width/(float)fb_size.height;
-            auto vp = scene_.cam.get_vp_matrix();
 
             auto& prog = app_.renderer().shader_manager().get_shader("default");
             prog.use();
-            prog.set_uniform("u_mvp", vp);
+            prog.set_uniform("u_view", scene_.cam.get_view_matrix());
+            prog.set_uniform("u_proj", scene_.cam.get_proj_matrix());
             prog.set_uniform("ambient.color", scene_.ambient.color);
 
             for (auto mesh : mesh_hndls_) {
