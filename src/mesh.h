@@ -20,7 +20,8 @@ struct Vertex {
 
     void transform(glm::mat4 tmat) noexcept {
         pos = static_cast<glm::vec3>(tmat * glm::vec4(pos, 1.f));
-        norm = static_cast<glm::vec3>(tmat * glm::vec4(norm, 1.f));
+        auto norm_mat = glm::inverseTranspose(glm::mat3(tmat));
+        norm = static_cast<glm::vec3>(norm_mat * glm::vec4(norm, 1.f));
     }
 
     static std::vector<VertexDescriptor> get_vertex_desc() noexcept {
