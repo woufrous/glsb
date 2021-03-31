@@ -20,9 +20,9 @@ struct Vertex {
 
     static std::vector<VertexDescriptor> get_vertex_desc() noexcept {
         return std::vector<VertexDescriptor>{
-            {"pos", 3, sizeof(Vertex), offsetof(Vertex, pos), true},
-            {"normal", 3, sizeof(Vertex), offsetof(Vertex, norm), true},
-            {"vert_uv", 2, sizeof(Vertex), offsetof(Vertex, uv), true},
+            {"v_pos", 3, sizeof(Vertex), offsetof(Vertex, pos), true},
+            {"v_normal", 3, sizeof(Vertex), offsetof(Vertex, norm), true},
+            {"v_uv", 2, sizeof(Vertex), offsetof(Vertex, uv), true},
         };
     }
 };

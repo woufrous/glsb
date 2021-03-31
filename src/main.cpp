@@ -59,8 +59,7 @@ class SandboxLayer final : public Layer {
                 40.f,
                 16.f/9.f
             };
-            scene_.light = Light{
-                {-1.f, 0.f, 1.f},
+            scene_.ambient = {
                 {1.f, 1.f, 1.f},
                 1.0f
             };
@@ -151,6 +150,7 @@ class SandboxLayer final : public Layer {
             ImGui::End();
             ImGui::Begin("Light", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
                 ImGui::SliderFloat3("Position", &scene_.light.pos[0], -3.f, 3.f, "%.1f", 1.f);
+                ImGui::ColorEdit3("Ambient Color", &scene_.ambient.color[0]);
             ImGui::End();
         }
 
@@ -162,7 +162,7 @@ class SandboxLayer final : public Layer {
             auto& prog = app_.renderer().shader_manager().get_shader("default");
             prog.use();
             prog.set_uniform("u_mvp", vp);
-            prog.set_uniform("light", scene_.light.pos);
+            prog.set_uniform("ambient.color", scene_.ambient.color);
 
             for (auto mesh : mesh_hndls_) {
                 app_.renderer().render(mesh);

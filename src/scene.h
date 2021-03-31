@@ -48,6 +48,10 @@ struct Light {
 
 struct Scene {
     Camera cam;
+    struct AmbientLight {
+        glm::vec3 color;
+        float intensity;
+    } ambient;
     Light light;
     std::vector<Mesh> meshes;
 };
