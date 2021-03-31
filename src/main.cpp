@@ -66,22 +66,6 @@ class SandboxLayer final : public Layer {
         }
 
         void init() override {
-            app_.input_manager().register_key_handler([](KeyCode code, KeyState state, KeyModifier mods) -> void {
-                const char* state_str = nullptr;
-                switch (state) {
-                    case KeyState::Pressed: {
-                        state_str = "pressed";
-                    } break;
-                    case KeyState::Released: {
-                        state_str = "released";
-                    } break;
-                    case KeyState::Repeated: {
-                        state_str = "repeated";
-                    } break;
-                }
-                spdlog::info("Key {} {} with modifiers 0b{:b}", static_cast<int>(code), state_str, static_cast<int>(mods));
-            });
-
             app_.input_manager().register_mouse_scroll_handler([this](double /*x_offs*/, double y_offs){
                 this->scene_.cam.fov += y_offs*5;
             });
