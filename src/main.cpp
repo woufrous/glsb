@@ -61,7 +61,7 @@ class SandboxLayer final : public Layer {
                 16.f/9.f
             };
             scene_.diffuse = {
-                {1.f, 1.f, 1.f},
+                {3.f, 3.f, 3.f},
                 {1.f, 1.f, 1.f},
                 {1.0f}
             };
@@ -148,7 +148,7 @@ class SandboxLayer final : public Layer {
                     ImGui::DragFloat("Ambient Intensity", &scene_.ambient.intensity, .1f, 0.0f, 2.0f, "%.1f", 1.f);
                 }
                 if (ImGui::CollapsingHeader("Diffuse Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
-                    ImGui::DragFloat3("Diffuse Direction", &scene_.diffuse.dir[0], .1f, -1.f, 1.f, "%.1f", 1.f);
+                    ImGui::DragFloat3("Diffuse Direction", &scene_.diffuse.pos[0], .1f, -5.f, 5.f, "%.1f", 1.f);
                     ImGui::ColorEdit3("Diffuse Color", &scene_.diffuse.color[0]);
                     ImGui::DragFloat("Diffuse Intensity", &scene_.diffuse.intensity, .1f, 0.0f, 2.0f, "%.1f", 1.f);
                 }
@@ -165,7 +165,7 @@ class SandboxLayer final : public Layer {
             prog.set_uniform("u_proj", scene_.cam.get_proj_matrix());
             prog.set_uniform("ambient.color", scene_.ambient.color);
             prog.set_uniform("ambient.intensity", scene_.ambient.intensity);
-            prog.set_uniform("diffuse.dir", scene_.diffuse.dir);
+            prog.set_uniform("diffuse.pos", scene_.diffuse.pos);
             prog.set_uniform("diffuse.color", scene_.diffuse.color);
             prog.set_uniform("diffuse.intensity", scene_.diffuse.intensity);
 

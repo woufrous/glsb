@@ -42,8 +42,8 @@ struct Camera {
     float aspect;
 };
 
-struct DiffuseLight {
-    glm::vec3 dir;
+struct Light {
+    glm::vec3 pos;
     glm::vec3 color;
     float intensity;
 };
@@ -54,5 +54,5 @@ struct Scene {
         glm::vec3 color;
         float intensity;
     } ambient;
-    DiffuseLight diffuse;
+    Light diffuse;
 };
