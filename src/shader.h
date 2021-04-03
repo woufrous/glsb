@@ -79,6 +79,16 @@ class Program {
             return pos;
         }
 
+        bool set_uniform(const char* name, float val) const noexcept {
+            auto loc = get_uniform_location(name);
+            if (!loc) {
+                spdlog::info("trying to set unknown uniform \"{}\"", name);
+                return false;
+            }
+            glUniform1f(*loc, val);
+            return true;
+        }
+
         bool set_uniform(const char* name, const glm::vec3& val) const noexcept {
             auto loc = get_uniform_location(name);
             if (!loc) {

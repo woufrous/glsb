@@ -67,7 +67,7 @@ class SandboxLayer final : public Layer {
             };
             scene_.ambient = {
                 {0.8f, 0.8f, 1.f},
-                0.1f
+                0.5f
             };
         }
 
@@ -144,8 +144,10 @@ class SandboxLayer final : public Layer {
             ImGui::End();
             ImGui::Begin("Light", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
                 ImGui::ColorEdit3("Ambient Color", &scene_.ambient.color[0]);
-                ImGui::SliderFloat3("Diffuse Direction", &scene_.diffuse.dir[0], -3.f, 3.f, "%.1f", 1.f);
+                ImGui::SliderFloat("Ambient Intensity", &scene_.ambient.intensity, 0.0f, 2.0f, "%.1f", 1.f);
+                ImGui::SliderFloat3("Diffuse Direction", &scene_.diffuse.dir[0], -1.f, 1.f, "%.1f", 1.f);
                 ImGui::ColorEdit3("Diffuse Color", &scene_.diffuse.color[0]);
+                ImGui::SliderFloat("Diffuse Intensity", &scene_.diffuse.intensity, 0.0f, 2.0f, "%.1f", 1.f);
             ImGui::End();
         }
 
@@ -158,8 +160,10 @@ class SandboxLayer final : public Layer {
             prog.set_uniform("u_view", scene_.cam.get_view_matrix());
             prog.set_uniform("u_proj", scene_.cam.get_proj_matrix());
             prog.set_uniform("ambient.color", scene_.ambient.color);
+            prog.set_uniform("ambient.intensity", scene_.ambient.intensity);
             prog.set_uniform("diffuse.dir", scene_.diffuse.dir);
             prog.set_uniform("diffuse.color", scene_.diffuse.color);
+            prog.set_uniform("diffuse.intensity", scene_.diffuse.intensity);
 
             for (auto mesh : mesh_hndls_) {
                 app_.renderer().render(mesh);
