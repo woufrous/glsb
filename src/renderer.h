@@ -36,7 +36,8 @@ class Renderer {
 
         void cleanup() {}
 
-        handle_type upload_mesh(const Mesh& mesh) {
+        template <typename VertexT>
+        handle_type upload_mesh(const Mesh<VertexT>& mesh, const char* shader_name) {
             GLuint vao;
             glGenVertexArrays(1, &vao);
             glBindVertexArray(vao);
@@ -45,7 +46,7 @@ class Renderer {
             vbo.bind();
             vbo.set_data(
                 mesh.vertex_data.data(),
-                mesh.vertex_data.size()*sizeof(Vertex),
+                mesh.vertex_data.size()*sizeof(VertexT),
                 GL_STATIC_DRAW
             );
 
@@ -57,8 +58,8 @@ class Renderer {
                 GL_STATIC_DRAW
             );
 
-            for (auto&& desc : Vertex::get_vertex_desc()) {
-                shader_manager_.get_shader("default").set_attrib_pointer(desc);
+            for (auto&& desc : VertexT::get_vertex_desc()) {
+                shader_manager_.get_shader(shader_name).set_attrib_pointer(desc);
             }
 
             // TODO: locking
@@ -69,8 +70,9 @@ class Renderer {
         }
 
         void render(handle_type mesh_hndl) const {
-            glBindVertexArray(meshes_[mesh_hndl].vao);
-            glDrawElements(GL_TRIANGLES, meshes_[mesh_hndl].ibo_size, GL_UNSIGNED_INT, 0);
+            const auto& mesh = meshes_[mesh_hndl];
+            glBindVertexArray(mesh.vao);
+            glDrawElements(GL_TRIANGLES, mesh.ibo_size, GL_UNSIGNED_INT, 0);
         }
 
         Extent2D<int> get_viewport_dim() const noexcept {

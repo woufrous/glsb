@@ -55,5 +55,4 @@ struct Scene {
         float intensity;
     } ambient;
     Light light;
-    std::vector<Mesh> meshes;
 };

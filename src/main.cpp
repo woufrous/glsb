@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 
 #define GLFW_INCLUDE_GL_3
 #include <GL/glew.h>
@@ -70,23 +71,27 @@ class SandboxLayer final : public Layer {
                 this->scene_.cam.fov += y_offs*5;
             });
 
-            auto vert_src = load_file("res/vert.glsl");
-            auto frag_src = load_file("res/frag.glsl");
+            auto materials = std::unordered_map<const char*, std::pair<std::filesystem::path, std::filesystem::path>>{
+                {"default", std::make_pair("res/vert.glsl", "res/frag.glsl")},
+                {"flat", std::make_pair("res/flat.vert.glsl", "res/flat.frag.glsl")},
+            };
 
-            auto shaders = std::vector<Shader>{};
-            shaders.emplace_back(Shader::Type::Vertex, vert_src.data());
-            shaders.emplace_back(Shader::Type::Fragment, frag_src.data());
+            for (const auto& [name, files] : materials) {
+                auto vert_src = load_file(files.first);
+                auto frag_src = load_file(files.second);
 
-            auto& prog = app_.renderer().shader_manager().add_shader(
-                "default", shaders
-            );
+                auto shaders = std::vector<Shader>{};
+                shaders.emplace_back(Shader::Type::Vertex, vert_src.data());
+                shaders.emplace_back(Shader::Type::Fragment, frag_src.data());
 
-            prog.use();
+                app_.renderer().shader_manager().add_shader(name, shaders);
+            }
 
-            scene_.meshes.emplace_back(load_obj("res/cube.obj"))
-                .transform(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 1.f)));
-            scene_.meshes.emplace_back(generate_quad(5.f, 5.f));
-            upload_meshes();
+            mesh_hndls_.emplace_back(app_.renderer().upload_mesh(
+                load_obj("res/cube.obj").transform(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 1.f))),
+                "default"
+            ));
+            mesh_hndls_.emplace_back(app_.renderer().upload_mesh(generate_quad(5.f, 5.f), "default"));
 
             auto img = Texture("res/cube.png");
 
@@ -154,12 +159,6 @@ class SandboxLayer final : public Layer {
         }
 
     private:
-        void upload_meshes() noexcept {
-            for (const auto& mesh : scene_.meshes) {
-                mesh_hndls_.emplace_back(app_.renderer().upload_mesh(mesh));
-            }
-        }
-
         Scene scene_;
 
         std::vector<Renderer::handle_type> mesh_hndls_;
