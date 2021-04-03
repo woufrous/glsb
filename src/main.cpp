@@ -138,16 +138,20 @@ class SandboxLayer final : public Layer {
             if (app_.input_manager().key_state(KeyCode::KEY_Z) == KeyState::Pressed) {
                 scene_.cam.pos -= scene_.cam.local_ccs().e_x*0.1f;
             }
-            ImGui::Begin("Camera control", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
-                ImGui::SliderFloat3("Position", &scene_.cam.pos[0], -3.f, 3.f, "%.1f", 1.f);
-                ImGui::SliderFloat("FoV", &scene_.cam.fov, 1.f, 179.f, "%.0f", 1.f);
-            ImGui::End();
-            ImGui::Begin("Light", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
-                ImGui::ColorEdit3("Ambient Color", &scene_.ambient.color[0]);
-                ImGui::SliderFloat("Ambient Intensity", &scene_.ambient.intensity, 0.0f, 2.0f, "%.1f", 1.f);
-                ImGui::SliderFloat3("Diffuse Direction", &scene_.diffuse.dir[0], -1.f, 1.f, "%.1f", 1.f);
-                ImGui::ColorEdit3("Diffuse Color", &scene_.diffuse.color[0]);
-                ImGui::SliderFloat("Diffuse Intensity", &scene_.diffuse.intensity, 0.0f, 2.0f, "%.1f", 1.f);
+            ImGui::Begin("Contols", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize);
+                if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+                    ImGui::DragFloat3("Position", &scene_.cam.pos[0], .1f, -3.f, 3.f, "%.1f", 1.f);
+                    ImGui::DragFloat("FoV", &scene_.cam.fov, 1.f, 1.f, 179.f, "%.0f", 1.f);
+                }
+                if (ImGui::CollapsingHeader("Ambient Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
+                    ImGui::ColorEdit3("Ambient Color", &scene_.ambient.color[0]);
+                    ImGui::DragFloat("Ambient Intensity", &scene_.ambient.intensity, .1f, 0.0f, 2.0f, "%.1f", 1.f);
+                }
+                if (ImGui::CollapsingHeader("Diffuse Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
+                    ImGui::DragFloat3("Diffuse Direction", &scene_.diffuse.dir[0], .1f, -1.f, 1.f, "%.1f", 1.f);
+                    ImGui::ColorEdit3("Diffuse Color", &scene_.diffuse.color[0]);
+                    ImGui::DragFloat("Diffuse Intensity", &scene_.diffuse.intensity, .1f, 0.0f, 2.0f, "%.1f", 1.f);
+                }
             ImGui::End();
         }
 
