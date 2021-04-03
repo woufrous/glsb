@@ -152,6 +152,10 @@ class SandboxLayer final : public Layer {
                     ImGui::ColorEdit3("Diffuse Color", &scene_.diffuse.color[0]);
                     ImGui::DragFloat("Diffuse Intensity", &scene_.diffuse.intensity, .1f, 0.0f, 2.0f, "%.1f", 1.f);
                 }
+                if (ImGui::CollapsingHeader("Specular Lighting", ImGuiTreeNodeFlags_DefaultOpen)) {
+                    ImGui::DragFloat("Specular Roughness", &roughness_, 1.f, 1.0f, 1000.0f, "%.0f");
+                    ImGui::DragFloat("Specular Intensity", &spec_intensity_, .1f, 0.0f, 10.0f, "%.1f");
+                }
             ImGui::End();
         }
 
@@ -168,6 +172,9 @@ class SandboxLayer final : public Layer {
             prog.set_uniform("diffuse.pos", scene_.diffuse.pos);
             prog.set_uniform("diffuse.color", scene_.diffuse.color);
             prog.set_uniform("diffuse.intensity", scene_.diffuse.intensity);
+            prog.set_uniform("spec.roughness", roughness_);
+            prog.set_uniform("spec.intensity", spec_intensity_);
+            prog.set_uniform("camera.pos", scene_.cam.pos);
 
             for (auto mesh : mesh_hndls_) {
                 app_.renderer().render(mesh);
@@ -176,6 +183,8 @@ class SandboxLayer final : public Layer {
 
     private:
         Scene scene_;
+        float roughness_ = 1.f;
+        float spec_intensity_ = 1.f;
 
         std::vector<Renderer::handle_type> mesh_hndls_;
 };
