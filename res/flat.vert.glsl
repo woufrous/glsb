@@ -1,7 +1,5 @@
 #version 330 core
 
-#include "/lights.glsl"
-
 in vec3 v_pos;
 in vec4 v_color;
 
