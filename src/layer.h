@@ -26,7 +26,7 @@ class Layer {
 
 class ImGuiLayer final : public Layer {
     public:
-        ImGuiLayer(Application& app, GLFWwindow* win) : Layer{app}, win_{win} {}
+        ImGuiLayer(Application& app, GLFWwindow* win) : Layer{app}, win_{win}, is_initialized_{false} {}
 
         void init() override {
             IMGUI_CHECKVERSION();
@@ -37,6 +37,7 @@ class ImGuiLayer final : public Layer {
             ImGui::StyleColorsDark();
             ImGui_ImplGlfw_InitForOpenGL(win_, true);
             ImGui_ImplOpenGL3_Init("#version 330 core");
+            is_initialized_ = true;
         }
 
         void prepare_frame() override {
@@ -46,9 +47,11 @@ class ImGuiLayer final : public Layer {
         }
 
         void cleanup() override {
-            ImGui_ImplOpenGL3_Shutdown();
-            ImGui_ImplGlfw_Shutdown();
-            ImGui::DestroyContext();
+            if (is_initialized_) {
+                ImGui_ImplOpenGL3_Shutdown();
+                ImGui_ImplGlfw_Shutdown();
+                ImGui::DestroyContext();
+            }
         }
 
         void on_update() override {
@@ -60,6 +63,7 @@ class ImGuiLayer final : public Layer {
         }
     private:
         GLFWwindow* win_;
+        bool is_initialized_;
 };
 
 using LayerStack = std::deque<std::unique_ptr<Layer>>;
