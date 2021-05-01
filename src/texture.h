@@ -7,9 +7,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-class Texture {
+class Bitmap {
     public:
-        Texture(const std::filesystem::path& fpath) : ptr_(nullptr, stbi_image_free) {
+        Bitmap(const std::filesystem::path& fpath) : ptr_(nullptr, stbi_image_free) {
             int channels;
             ptr_ = std::unique_ptr<uint8_t, decltype(&stbi_image_free)>(
                 reinterpret_cast<uint8_t*>(

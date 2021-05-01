@@ -98,7 +98,7 @@ class SandboxLayer final : public Layer {
             ));
             mesh_hndls_.emplace_back(app_.renderer().upload_mesh(generate_quad(5.f, 5.f), "default"));
 
-            auto img = Texture("res/cube.png");
+            auto img = Bitmap("res/cube.png");
 
             GLuint tex;
             glGenTextures(1, &tex);
