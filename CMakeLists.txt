@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 
 include(cmake/build_type.cmake)
 include(cmake/init_conan.cmake)
+include(cmake/compiler_warnings.cmake)
 
 select_build_type()
 
