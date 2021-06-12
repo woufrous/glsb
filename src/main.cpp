@@ -99,20 +99,13 @@ class SandboxLayer final : public Layer {
 
             auto img = Bitmap("res/cube.png");
 
-            GLuint tex;
-            glGenTextures(1, &tex);
-            glBindTexture(GL_TEXTURE_2D, tex);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+            tex_.set_filtering(TextureFilter::Linear, true);
+            tex_.set_wrapping(TextureWrapping::ClampToBorder);
             if (g_max_anisotropy > 0) {
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, g_max_anisotropy);
             }
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<const void*>(img.data()));
-            glGenerateMipmap(GL_TEXTURE_2D);
+            tex_.allocate(Texture::Target::Texture2D, img.width(), img.height(), reinterpret_cast<const void*>(img.data()));
         }
 
         void cleanup() override {}
@@ -184,6 +177,8 @@ class SandboxLayer final : public Layer {
         Scene scene_;
         float roughness_ = 1.f;
         float spec_intensity_ = 1.f;
+
+        Texture tex_;
 
         std::vector<Renderer::handle_type> mesh_hndls_;
 };

@@ -33,16 +33,101 @@ class Bitmap {
             return ptr_.get();
         }
 
-        uint32_t width() const noexcept {
-            return static_cast<uint32_t>(width_);
+        int width() const noexcept {
+            return width_;
         }
 
-        uint32_t height() const noexcept {
-            return static_cast<uint32_t>(height_);
+        int height() const noexcept {
+            return height_;
         }
 
     private:
         std::unique_ptr<uint8_t, decltype(&stbi_image_free)> ptr_;
         int width_;
         int height_;
+};
+
+enum class TextureFormat : GLenum {
+    RGBA = GL_RGBA,
+};
+
+enum class TextureFilter {
+    Nearest,
+    Linear,
+    Trilinear,
+};
+
+enum class TextureWrapping : GLint {
+    ClampToBorder = GL_CLAMP_TO_BORDER,
+};
+
+class Texture {
+    struct TextureDeleter {
+        void operator()(GLuint hndl) const noexcept {
+            glDeleteTextures(1, &hndl);
+        }
+    };
+    using UniqueTextureHandle = UniqueHandle<GLuint, TextureDeleter>;
+    public:
+        enum class Target : GLenum {
+            Texture2D = GL_TEXTURE_2D,
+        };
+
+        Texture() : hndl_{} {
+            auto tex = UniqueTextureHandle::value_type{};
+            glGenTextures(1, &tex);
+            hndl_.reset(tex);
+        }
+
+        void bind(Target tgt) const {
+            glBindTexture(static_cast<std::underlying_type_t<Target>>(tgt), hndl_.get());
+        }
+
+        void allocate(Target tgt, int width, int height, const void* data) {
+            this->bind(tgt);
+            glTexImage2D(static_cast<std::underlying_type_t<Target>>(tgt), 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            if (use_mipmap_) {
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
+        }
+
+        void set_filtering(TextureFilter filter, bool use_mipmap) {
+            use_mipmap_ = use_mipmap;
+
+            this->bind(Target::Texture2D);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, get_filter_param(filter, use_mipmap));
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, get_filter_param(filter, false));
+        }
+
+        void set_wrapping(TextureWrapping wrapping) {
+            this->bind(Target::Texture2D);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
+        }
+
+    private:
+        GLint get_filter_param(TextureFilter filter, bool use_mipmap) {
+            switch (filter) {
+                case TextureFilter::Nearest: {
+                    if (use_mipmap) {
+                        return GL_NEAREST_MIPMAP_NEAREST;
+                    } else {
+                        return GL_NEAREST;
+                    }
+                }
+                case TextureFilter::Linear: {
+                    if (use_mipmap) {
+                        return GL_LINEAR_MIPMAP_NEAREST;
+                    } else {
+                        return GL_LINEAR;
+                    }
+                }
+                case TextureFilter::Trilinear: {
+                    return GL_LINEAR_MIPMAP_LINEAR;
+                }
+            }
+            abort();
+        }
+        UniqueTextureHandle hndl_;
+        bool use_mipmap_ = false;
 };
