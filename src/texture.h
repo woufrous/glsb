@@ -81,8 +81,6 @@ struct BindingPointTraits<TextureTarget> {
     static constexpr auto binding_fn = glBindTexture;
 };
 
-class Texture;
-
 class TextureBindingPoint : public BindingPoint<TextureTarget, GLuint> {
     public:
         void set_parameter(TextureParameter param, GLint val) {
