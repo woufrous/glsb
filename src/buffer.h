@@ -2,7 +2,7 @@
 
 #include "utils.h"
 
-#include <GLFW/glfw3.h>
+#include <GL/glew.h>
 
 enum class BufferType : GLenum {
     Array = GL_ARRAY_BUFFER,

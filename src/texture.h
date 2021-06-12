@@ -7,6 +7,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <GL/glew.h>
+
 class Bitmap {
     public:
         Bitmap(const std::filesystem::path& fpath) : ptr_(nullptr, stbi_image_free) {
