@@ -49,9 +49,13 @@ static void gl_error_cb(
 }
 #endif // NDEBUG
 
+TextureBindingPoint tex2d = []() {
+    return TextureBindingPoint(TextureTarget::Texture2D);
+}();
+
 class SandboxLayer final : public Layer {
     public:
-        SandboxLayer(Application& app) : Layer{app} {
+        SandboxLayer(Application& app) : Layer{app}, tex_{tex2d} {
             scene_.cam = Camera{
                 {2.f, 2.f, 2.f},
                 {0.f, 0.f, 0.f},
@@ -105,7 +109,7 @@ class SandboxLayer final : public Layer {
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, g_max_anisotropy);
             }
 
-            tex_.allocate(Texture::Target::Texture2D, img.width(), img.height(), reinterpret_cast<const void*>(img.data()));
+            tex_.allocate(img.width(), img.height(), reinterpret_cast<const void*>(img.data()));
         }
 
         void cleanup() override {}

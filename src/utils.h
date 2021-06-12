@@ -64,6 +64,29 @@ class UniqueHandle {
         Deleter deleter_;
 };
 
+template <typename TgtT>
+struct BindingPointTraits {};
+
+template <typename TgtT, typename IdxT, typename BindingTraits=BindingPointTraits<TgtT>>
+class BindingPoint {
+    public:
+        using target_type = TgtT;
+        using index_type = IdxT;
+        using binding_fn_type = void(*)(std::underlying_type_t<target_type>, index_type);
+
+        BindingPoint(target_type tgt) : tgt_{tgt} {}
+
+        void bind(index_type idx) const noexcept {
+            BindingPointTraits<TgtT>::binding_fn(static_cast<std::underlying_type_t<TgtT>>(tgt_), idx);
+        }
+
+        void unbind() const noexcept {
+            BindingPointTraits<TgtT>::binding_fn(static_cast<std::underlying_type_t<TgtT>>(tgt_), index_type{});
+        }
+    protected:
+        TgtT tgt_;
+};
+
 inline std::vector<char> load_file(const std::filesystem::path& fpath) {
     auto ifs = std::ifstream(fpath);
     ifs.seekg(0, std::ios_base::end);

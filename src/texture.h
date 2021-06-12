@@ -61,6 +61,21 @@ enum class TextureWrapping : GLint {
     ClampToBorder = GL_CLAMP_TO_BORDER,
 };
 
+enum class TextureTarget : GLenum {
+    Texture2D = GL_TEXTURE_2D,
+};
+
+template <>
+struct BindingPointTraits<TextureTarget> {
+    static constexpr auto binding_fn = glBindTexture;
+};
+
+class Texture;
+
+class TextureBindingPoint : public BindingPoint<TextureTarget, GLuint> {
+    friend Texture;
+};
+
 class Texture {
     struct TextureDeleter {
         void operator()(GLuint hndl) const noexcept {
@@ -68,24 +83,21 @@ class Texture {
         }
     };
     using UniqueTextureHandle = UniqueHandle<GLuint, TextureDeleter>;
-    public:
-        enum class Target : GLenum {
-            Texture2D = GL_TEXTURE_2D,
-        };
 
-        Texture() : hndl_{} {
+    public:
+        Texture(TextureBindingPoint& binding) : binding_{binding}, hndl_{} {
             auto tex = UniqueTextureHandle::value_type{};
             glGenTextures(1, &tex);
             hndl_.reset(tex);
         }
 
-        void bind(Target tgt) const {
-            glBindTexture(static_cast<std::underlying_type_t<Target>>(tgt), hndl_.get());
+        void bind() const {
+            binding_.bind(hndl_.get());
         }
 
-        void allocate(Target tgt, int width, int height, const void* data) {
-            this->bind(tgt);
-            glTexImage2D(static_cast<std::underlying_type_t<Target>>(tgt), 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        void allocate(int width, int height, const void* data) {
+            this->bind();
+            glTexImage2D(static_cast<std::underlying_type_t<TextureTarget>>(binding_.tgt_), 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
             if (use_mipmap_) {
                 glGenerateMipmap(GL_TEXTURE_2D);
             }
@@ -94,13 +106,13 @@ class Texture {
         void set_filtering(TextureFilter filter, bool use_mipmap) {
             use_mipmap_ = use_mipmap;
 
-            this->bind(Target::Texture2D);
+            this->bind();
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, get_filter_param(filter, use_mipmap));
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, get_filter_param(filter, false));
         }
 
         void set_wrapping(TextureWrapping wrapping) {
-            this->bind(Target::Texture2D);
+            this->bind();
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
         }
@@ -128,6 +140,8 @@ class Texture {
             }
             abort();
         }
+
+        TextureBindingPoint& binding_;
         UniqueTextureHandle hndl_;
         bool use_mipmap_ = false;
 };
