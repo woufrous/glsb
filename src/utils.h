@@ -67,24 +67,68 @@ class UniqueHandle {
 template <typename TgtT>
 struct BindingPointTraits {};
 
-template <typename TgtT, typename IdxT, typename BindingTraits=BindingPointTraits<TgtT>>
+template <typename BindingPointT>
+class BindingContext;
+
+template <typename TgtT, typename IdxT, typename CtxT, typename BindingTraits=BindingPointTraits<TgtT>>
 class BindingPoint {
     public:
         using target_type = TgtT;
         using index_type = IdxT;
         using binding_fn_type = void(*)(std::underlying_type_t<target_type>, index_type);
+        using context_type = CtxT;
 
-        BindingPoint(target_type tgt) : tgt_{tgt} {}
+        constexpr BindingPoint(target_type tgt) : tgt_{tgt} {}
 
-        void bind(index_type idx) const noexcept {
-            BindingPointTraits<TgtT>::binding_fn(static_cast<std::underlying_type_t<TgtT>>(tgt_), idx);
+        [[nodiscard]] context_type use(index_type idx) {
+            return context_type(*this, idx);
         }
 
-        void unbind() const noexcept {
-            BindingPointTraits<TgtT>::binding_fn(static_cast<std::underlying_type_t<TgtT>>(tgt_), index_type{});
+        bool bind(index_type idx) noexcept {
+            if (idx == bound_idx_) {
+                // already bound: do nothing
+                return false;
+            }
+            // TODO: handle multiple access => lock or at least log
+            BindingPointTraits<TgtT>::binding_fn(static_cast<std::underlying_type_t<TgtT>>(tgt_), idx);
+            bound_idx_ = idx;
+            return true;
+        }
+
+        void unbind() noexcept {
+            if (bound_idx_ != index_type{}) {
+                BindingPointTraits<TgtT>::binding_fn(static_cast<std::underlying_type_t<TgtT>>(tgt_), index_type{});
+                bound_idx_ = index_type{};
+            }
         }
     protected:
         TgtT tgt_;
+        index_type bound_idx_;
+
+        friend context_type;
+        template <typename T>
+        friend class BindingContext;
+};
+
+template <typename BindingPointT>
+class BindingContext {
+    public:
+        BindingContext(BindingPointT& binding, typename BindingPointT::index_type idx) : binding_{binding}, idx_{idx} {
+            unbind_on_exit_ = binding_.bind(idx);
+        }
+        ~BindingContext() {
+            if (unbind_on_exit_) {
+                binding_.unbind();
+            }
+        }
+
+        typename BindingPointT::target_type tgt() const noexcept {
+            return binding_.tgt_;
+        }
+    private:
+        BindingPointT& binding_;
+        typename BindingPointT::index_type idx_;
+        bool unbind_on_exit_ = false;
 };
 
 inline std::vector<char> load_file(const std::filesystem::path& fpath) {

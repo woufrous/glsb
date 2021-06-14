@@ -49,9 +49,7 @@ static void gl_error_cb(
 }
 #endif // NDEBUG
 
-TextureBindingPoint tex2d = []() {
-    return TextureBindingPoint(TextureTarget::Texture2D);
-}();
+auto tex2d = TextureBindingPoint(TextureTarget::Texture2D);
 
 class SandboxLayer final : public Layer {
     public:
@@ -171,10 +169,12 @@ class SandboxLayer final : public Layer {
             prog.set_uniform("spec.roughness", roughness_);
             prog.set_uniform("spec.intensity", spec_intensity_);
             prog.set_uniform("camera.pos", scene_.cam.pos);
+            tex_.bind();
 
             for (auto mesh : mesh_hndls_) {
                 app_.renderer().render(mesh);
             }
+            tex_.unbind();
         }
 
     private:

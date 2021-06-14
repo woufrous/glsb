@@ -81,17 +81,23 @@ struct BindingPointTraits<TextureTarget> {
     static constexpr auto binding_fn = glBindTexture;
 };
 
-class TextureBindingPoint : public BindingPoint<TextureTarget, GLuint> {
+class TextureBindingContext;
+
+using TextureBindingPoint = BindingPoint<TextureTarget, GLuint, TextureBindingContext>;
+
+class TextureBindingContext : public BindingContext<TextureBindingPoint> {
     public:
+        TextureBindingContext(TextureBindingPoint& binding, TextureBindingPoint::index_type idx) :
+            BindingContext<TextureBindingPoint>(binding, idx) {}
         void set_parameter(TextureParameter param, GLint val) {
             glTexParameteri(
-                static_cast<std::underlying_type_t<TextureTarget>>(tgt_),
+                static_cast<std::underlying_type_t<TextureTarget>>(tgt()),
                 static_cast<std::underlying_type_t<TextureParameter>>(param),
                 val);
         }
         void allocate(TextureFormat fmt, TextureType type, int width, int height, const void* data) {
             glTexImage2D(
-                static_cast<std::underlying_type_t<TextureTarget>>(tgt_),
+                static_cast<std::underlying_type_t<TextureTarget>>(tgt()),
                 0,
                 static_cast<GLint>(fmt),    // the internal format is GLint, not GLenum
                 width, height, 0,
@@ -100,7 +106,7 @@ class TextureBindingPoint : public BindingPoint<TextureTarget, GLuint> {
                 data);
         }
         void gen_mipmap() {
-            glGenerateMipmap(static_cast<std::underlying_type_t<TextureTarget>>(tgt_));
+            glGenerateMipmap(static_cast<std::underlying_type_t<TextureTarget>>(tgt()));
         }
 };
 
@@ -119,30 +125,36 @@ class Texture {
             hndl_.reset(tex);
         }
 
-        void bind() const {
+        void allocate(int width, int height, const void* data) {
+            auto tex = binding_.use(hndl_.get());
+            tex.allocate(TextureFormat::RGBA, TextureType::UnsignedByte, width, height, data);
+            if (use_mipmap_) {
+                tex.gen_mipmap();
+            }
+        }
+
+        void bind() {
             binding_.bind(hndl_.get());
         }
 
-        void allocate(int width, int height, const void* data) {
-            this->bind();
-            binding_.allocate(TextureFormat::RGBA, TextureType::UnsignedByte, width, height, data);
-            if (use_mipmap_) {
-                binding_.gen_mipmap();
-            }
+        void unbind() {
+            binding_.unbind();
         }
 
         void set_filtering(TextureFilter filter, bool use_mipmap) {
             use_mipmap_ = use_mipmap;
 
-            this->bind();
-            binding_.set_parameter(TextureParameter::MinFilter, get_filter_param(filter, use_mipmap));
-            binding_.set_parameter(TextureParameter::MagFilter, get_filter_param(filter, false));
+            {
+                auto tex = binding_.use(hndl_.get());
+                tex.set_parameter(TextureParameter::MinFilter, get_filter_param(filter, use_mipmap));
+                tex.set_parameter(TextureParameter::MagFilter, get_filter_param(filter, false));
+            }
         }
 
         void set_wrapping(TextureWrapping wrapping) {
-            this->bind();
-            binding_.set_parameter(TextureParameter::WrapS, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
-            binding_.set_parameter(TextureParameter::WrapT, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
+            auto tex = binding_.use(hndl_.get());
+            tex.set_parameter(TextureParameter::WrapS, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
+            tex.set_parameter(TextureParameter::WrapT, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
         }
 
     private:
