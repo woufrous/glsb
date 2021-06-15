@@ -12,6 +12,7 @@ init_conan()
 
 conan_cmake_configure(
     REQUIRES
+        catch2/2.13.6
         glew/2.2.0
         glfw/3.3.4
         glm/0.9.9.8
@@ -38,3 +39,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_subdirectory(src)
+
+option(BUILD_TESTING "Build unittests." ON)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
