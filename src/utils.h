@@ -70,19 +70,14 @@ struct BindingPointTraits {};
 template <typename BindingPointT>
 class BindingContext;
 
-template <typename TgtT, typename IdxT, typename CtxT, typename BindingTraits=BindingPointTraits<TgtT>>
+template <typename TgtT, typename IdxT, typename BindingTraits=BindingPointTraits<TgtT>>
 class BindingPoint {
     public:
         using target_type = TgtT;
         using index_type = IdxT;
         using binding_fn_type = void(*)(std::underlying_type_t<target_type>, index_type);
-        using context_type = CtxT;
 
         constexpr BindingPoint(target_type tgt) : tgt_{tgt} {}
-
-        [[nodiscard]] context_type use(index_type idx) {
-            return context_type(*this, idx);
-        }
 
         bool bind(index_type idx) noexcept {
             if (idx == bound_idx_) {
@@ -105,7 +100,6 @@ class BindingPoint {
         TgtT tgt_;
         index_type bound_idx_;
 
-        friend context_type;
         template <typename T>
         friend class BindingContext;
 };

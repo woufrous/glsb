@@ -83,7 +83,7 @@ struct BindingPointTraits<TextureTarget> {
 
 class TextureBindingContext;
 
-using TextureBindingPoint = BindingPoint<TextureTarget, GLuint, TextureBindingContext>;
+using TextureBindingPoint = BindingPoint<TextureTarget, GLuint>;
 
 class TextureBindingContext : public BindingContext<TextureBindingPoint> {
     public:
@@ -126,7 +126,7 @@ class Texture {
         }
 
         void allocate(int width, int height, const void* data) {
-            auto tex = binding_.use(hndl_.get());
+            auto tex = TextureBindingContext(binding_, hndl_.get());
             tex.allocate(TextureFormat::RGBA, TextureType::UnsignedByte, width, height, data);
             if (use_mipmap_) {
                 tex.gen_mipmap();
@@ -145,14 +145,14 @@ class Texture {
             use_mipmap_ = use_mipmap;
 
             {
-                auto tex = binding_.use(hndl_.get());
+                auto tex = TextureBindingContext(binding_, hndl_.get());
                 tex.set_parameter(TextureParameter::MinFilter, get_filter_param(filter, use_mipmap));
                 tex.set_parameter(TextureParameter::MagFilter, get_filter_param(filter, false));
             }
         }
 
         void set_wrapping(TextureWrapping wrapping) {
-            auto tex = binding_.use(hndl_.get());
+            auto tex = TextureBindingContext(binding_, hndl_.get());
             tex.set_parameter(TextureParameter::WrapS, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
             tex.set_parameter(TextureParameter::WrapT, static_cast<std::underlying_type_t<TextureWrapping>>(wrapping));
         }
