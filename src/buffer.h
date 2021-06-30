@@ -26,11 +26,12 @@ class Buffer {
         }
 
         void set_data(const void* data, size_t size, GLenum usage) const {
+            assert((size < PTRDIFF_MAX));
             bool do_unbind = !is_bound_;
             bind();
             glBufferData(
                 static_cast<std::underlying_type_t<BufferType>>(Type),
-                size,
+                static_cast<GLsizeiptr>(size),
                 data,
                 usage);
             if (do_unbind) {

@@ -63,16 +63,17 @@ class Renderer {
             }
 
             // TODO: locking
-            meshes_.emplace_back(vao, std::move(vbo), std::move(ibo), mesh.index_data.size());
+            meshes_.push_back(mesh_handle{std::move(vao), std::move(vbo), std::move(ibo), mesh.index_data.size()});
             auto ret_idx = meshes_.size()-1;
 
             return ret_idx;
         }
 
         void render(handle_type mesh_hndl) const {
+            assert(meshes_[mesh_hndl].ibo_size < INT_MAX);
             const auto& mesh = meshes_[mesh_hndl];
             glBindVertexArray(mesh.vao);
-            glDrawElements(GL_TRIANGLES, mesh.ibo_size, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.ibo_size), GL_UNSIGNED_INT, 0);
         }
 
         Extent2D<int> get_viewport_dim() const noexcept {

@@ -21,7 +21,7 @@ struct Vertex {
     void transform(glm::mat4 tmat) noexcept {
         pos = static_cast<glm::vec3>(tmat * glm::vec4(pos, 1.f));
         auto norm_mat = glm::inverseTranspose(glm::mat3(tmat));
-        norm = static_cast<glm::vec3>(norm_mat * glm::vec4(norm, 1.f));
+        norm = norm_mat * glm::vec4(norm, 1.f);
     }
 
     static std::vector<VertexDescriptor> get_vertex_desc() noexcept {
@@ -94,21 +94,27 @@ Mesh<Vertex> load_obj(const std::filesystem::path& fpath) {
 
     for (const auto& shape : shapes) {
         for (const auto& idx : shape.mesh.indices) {
+            assert(idx.vertex_index >= 0);
+            assert(idx.normal_index >= 0);
+            assert(idx.texcoord_index >= 0);
+            auto vert_idx = static_cast<size_t>(idx.vertex_index);
+            auto norm_idx = static_cast<size_t>(idx.normal_index);
+            auto tex_coord_idx = static_cast<size_t>(idx.texcoord_index);
             mesh.vertex_data.emplace_back(Vertex{
                 {
-                    attrib.vertices[(idx.vertex_index*3) + 0],
-                    attrib.vertices[(idx.vertex_index*3) + 1],
-                    attrib.vertices[(idx.vertex_index*3) + 2],
+                    attrib.vertices[(vert_idx*3) + 0],
+                    attrib.vertices[(vert_idx*3) + 1],
+                    attrib.vertices[(vert_idx*3) + 2],
                 }, {
-                    attrib.normals[(idx.normal_index*3) + 0],
-                    attrib.normals[(idx.normal_index*3) + 1],
-                    attrib.normals[(idx.normal_index*3) + 2],
+                    attrib.normals[(norm_idx*3) + 0],
+                    attrib.normals[(norm_idx*3) + 1],
+                    attrib.normals[(norm_idx*3) + 2],
                 }, {
-                    attrib.texcoords[(idx.texcoord_index*2) + 0],
-                    1.f - attrib.texcoords[(idx.texcoord_index*2) + 1],
+                    attrib.texcoords[(tex_coord_idx*2) + 0],
+                    1.f - attrib.texcoords[(tex_coord_idx*2) + 1],
                 }
             });
-            mesh.index_data.push_back(mesh.index_data.size());
+            mesh.index_data.push_back(static_cast<uint32_t>(mesh.index_data.size()));
         }
     }
 

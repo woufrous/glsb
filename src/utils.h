@@ -128,12 +128,12 @@ class BindingContext {
 inline std::vector<char> load_file(const std::filesystem::path& fpath) {
     auto ifs = std::ifstream(fpath);
     ifs.seekg(0, std::ios_base::end);
-    auto len = static_cast<size_t>(ifs.tellg());
+    auto len = std::max(ifs.tellg() - std::streampos(0), std::streamoff(0));
     ifs.seekg(0);
 
-    auto ret = std::vector<char>(len+1);
+    auto ret = std::vector<char>(static_cast<size_t>(len)+1);
     ifs.read(ret.data(), len);
-    ret[len] = 0;
+    ret[static_cast<decltype(ret)::size_type>(len)] = 0;
 
     return ret;
 }

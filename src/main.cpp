@@ -25,13 +25,13 @@ static void glfw_error_cb(int error, const char* msg) {
 
 #ifndef NDEBUG
 static void gl_error_cb(
-        GLenum source,
-        GLenum type,
-        GLuint id,
-        GLenum severity,
-        GLsizei length,
+        [[maybe_unused]] GLenum source,
+        [[maybe_unused]] GLenum type,
+        [[maybe_unused]] GLuint id,
+        [[maybe_unused]] GLenum severity,
+        [[maybe_unused]] GLsizei length,
         const GLchar *message,
-        const void *userParam) {
+        [[maybe_unused]] const void *userParam) {
     auto level = spdlog::level::critical;
     switch (severity) {
         case GL_DEBUG_SEVERITY_LOW:
@@ -64,7 +64,7 @@ class SandboxLayer final : public Layer {
             scene_.diffuse = {
                 {3.f, 3.f, 3.f},
                 {1.f, 1.f, 1.f},
-                {1.0f}
+                1.0f
             };
             scene_.ambient = {
                 {0.8f, 0.8f, 1.f},
@@ -74,7 +74,7 @@ class SandboxLayer final : public Layer {
 
         void init() override {
             app_.input_manager().register_mouse_scroll_handler([this](double /*x_offs*/, double y_offs){
-                this->scene_.cam.fov += y_offs*5;
+                this->scene_.cam.fov += static_cast<float>(y_offs)*5;
             });
 
             auto materials = std::unordered_map<const char*, std::pair<std::filesystem::path, std::filesystem::path>>{
@@ -155,7 +155,7 @@ class SandboxLayer final : public Layer {
 
         void on_draw() override {
             auto fb_size = app_.renderer().get_viewport_dim();
-            scene_.cam.aspect = (float)fb_size.width/(float)fb_size.height;
+            scene_.cam.aspect = static_cast<float>(fb_size.width)/static_cast<float>(fb_size.height);
 
             auto& prog = app_.renderer().shader_manager().get_shader("default");
             prog.use();

@@ -52,11 +52,12 @@ class Program {
             link_program(shaders);
         }
 
-        std::optional<GLint> get_attrib_location(const char* name) const noexcept {
+        std::optional<GLuint> get_attrib_location(const char* name) const noexcept {
             auto pos = glGetAttribLocation(prog_.get(), name);
             if ((pos == -1) || (pos == GL_INVALID_OPERATION)) {
                 return std::nullopt;
             }
+            assert(pos >= 0);
             return pos;
         }
 
@@ -66,7 +67,15 @@ class Program {
                 spdlog::info("trying to bind unkown attribute \"{}\"", desc.name);
                 return false;
             }
-            glVertexAttribPointer(*pos, desc.count, GL_FLOAT, desc.is_normalized ? GL_TRUE : GL_FALSE, desc.stride, (void*)(desc.offset));
+            assert(desc.count < INT_MAX);
+            assert(desc.stride < INT_MAX);
+            glVertexAttribPointer(
+                *pos,
+                static_cast<GLint>(desc.count),
+                GL_FLOAT,
+                desc.is_normalized ? GL_TRUE : GL_FALSE,
+                static_cast<GLsizei>(desc.stride),
+                reinterpret_cast<void*>(desc.offset));
             glEnableVertexAttribArray(*pos);
             return true;
         }

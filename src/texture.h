@@ -14,9 +14,7 @@ class Bitmap {
         Bitmap(const std::filesystem::path& fpath) : ptr_(nullptr, stbi_image_free) {
             int channels;
             ptr_ = std::unique_ptr<uint8_t, decltype(&stbi_image_free)>(
-                reinterpret_cast<uint8_t*>(
-                    stbi_load(fpath.string().c_str(), &width_, &height_, &channels, STBI_rgb_alpha)
-                ),
+                stbi_load(fpath.string().c_str(), &width_, &height_, &channels, STBI_rgb_alpha),
                 stbi_image_free
             );
 
@@ -26,7 +24,7 @@ class Bitmap {
         }
 
         size_t size() const noexcept {
-            return width_ * height_ * 4;
+            return static_cast<size_t>(std::abs(width_)) * static_cast<size_t>(std::abs(height_)) * 4;
         }
 
         const uint8_t* data() const noexcept {
