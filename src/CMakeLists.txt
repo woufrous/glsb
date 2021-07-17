@@ -17,16 +17,20 @@ target_link_libraries(glsb_imgui_bindings
         imgui::imgui
 )
 
-add_executable(glsb
-    main.cpp
+add_library(glsb_lib
     shader.cpp
 )
-set_target_warnings(glsb)
-target_compile_features(glsb
+target_include_directories(glsb_lib
+    PUBLIC
+        .
+)
+add_library(glsb::lib ALIAS glsb_lib)
+set_target_warnings(glsb_lib)
+target_compile_features(glsb_lib
     PUBLIC
         cxx_std_20
 )
-target_link_libraries(glsb
+target_link_libraries(glsb_lib
     PUBLIC
         glsb_imgui_bindings
         GLEW::GLEW

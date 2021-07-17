@@ -8,14 +8,14 @@
 #include <spdlog/spdlog.h>
 #include <imgui.h>
 
-#include "application.h"
-#include "layer.h"
-#include "texture.h"
-#include "scene.h"
-#include "shader.h"
-#include "buffer.h"
-#include "renderer.h"
-#include "utils.h"
+#include <application.h>
+#include <layer.h>
+#include <texture.h>
+#include <scene.h>
+#include <shader.h>
+#include <buffer.h>
+#include <renderer.h>
+#include <utils.h>
 
 static float g_max_anisotropy = -1.;
 

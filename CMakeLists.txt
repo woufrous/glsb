@@ -39,6 +39,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_subdirectory(src)
+add_subdirectory(bin)
 
 option(BUILD_TESTING "Build unittests." ON)
 if(BUILD_TESTING)
