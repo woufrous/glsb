@@ -8,8 +8,6 @@ using namespace std::string_literals;
 
 #include <glm/glm.hpp>
 #include <GL/glew.h>
-#define GLFW_INCLUDE_GL_3
-#include <GLFW/glfw3.h>
 
 #include <spdlog/spdlog.h>
 

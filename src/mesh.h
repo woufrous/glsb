@@ -9,6 +9,9 @@ using namespace std::string_literals;
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
 #include "renderer.h"
 #include "shader.h"
 #include "utils.h"
